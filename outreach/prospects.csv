@@ -1,0 +1,5 @@
+id,business_name,contact_name,email,phone,city,state,niche,has_website,website_url,facebook_url,source,status,notes,date_added,follow_up_date
+1,Isle Plumbers & Gas,Martin Newton,newpipe@bigpond.com,,,Coochiemudlo Island,QLD,Plumber,No,,https://coochiemudloisland.com.au/business-directory,Coochiemudlo Directory,Prospect,,2026-06-30,2026-07-02
+2,Shelley Contracting,Steven Shelley,info@shelleycontracting.com.au,,,Coochiemudlo Island,QLD,Painter,Unknown,,,Coochiemudlo Directory,Prospect,,2026-06-30,2026-07-02
+3,Home & Garden Landscaping,,homeandgarden.goldcoast@gmail.com,,,Gold Coast,QLD,Landscaper,No,,,Web Search,Prospect,,2026-06-30,2026-07-02
+4,YB Painting Services,,mta03084@bigpond.net.au,,,Brisbane,QLD,Painter,Yes,https://www.ybpainting.com.au,,Web Search,Low Priority,Has website - check if outdated,2026-06-30,
