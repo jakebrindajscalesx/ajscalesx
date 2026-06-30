@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AJScalesX — Outreach Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #e0e0e0; min-height: 100vh; padding: 24px; }
+
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+    .header h1 { font-size: 22px; font-weight: 700; color: #fff; }
+    .header .goal { background: #1a1a2e; border: 1px solid #6c63ff; border-radius: 8px; padding: 10px 20px; font-size: 14px; color: #a89cff; }
+    .goal span { color: #6c63ff; font-weight: 700; font-size: 18px; }
+
+    .day-banner { background: linear-gradient(135deg, #6c63ff22, #00d4aa22); border: 1px solid #6c63ff44; border-radius: 12px; padding: 16px 24px; margin-bottom: 28px; display: flex; align-items: center; gap: 16px; }
+    .day-badge { background: #6c63ff; color: #fff; font-weight: 800; font-size: 13px; padding: 4px 12px; border-radius: 20px; }
+    .day-text { font-size: 14px; color: #aaa; }
+    .day-text strong { color: #fff; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .stat-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; text-align: center; }
+    .stat-card .number { font-size: 36px; font-weight: 800; margin-bottom: 4px; }
+    .stat-card .label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-sent .number { color: #6c63ff; }
+    .stat-replied .number { color: #00d4aa; }
+    .stat-interested .number { color: #ffd700; }
+    .stat-closed .number { color: #00ff88; }
+    .stat-revenue .number { color: #00ff88; font-size: 28px; }
+
+    .progress-bar-wrap { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+    .progress-bar-wrap h3 { font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+    .progress-bar { background: #2a2a2a; border-radius: 20px; height: 12px; overflow: hidden; margin-bottom: 8px; }
+    .progress-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, #6c63ff, #00d4aa); transition: width 0.5s; }
+    .progress-labels { display: flex; justify-content: space-between; font-size: 12px; color: #666; }
+
+    .pipeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 32px; }
+    .pipeline-col { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 16px; }
+    .pipeline-col h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .pipeline-col h4 .count { background: #2a2a2a; border-radius: 20px; padding: 1px 8px; font-size: 11px; color: #aaa; }
+    .pipeline-card { background: #222; border: 1px solid #333; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; transition: border-color 0.2s; }
+    .pipeline-card:hover { border-color: #6c63ff; }
+    .pipeline-card .biz { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 2px; }
+    .pipeline-card .detail { font-size: 11px; color: #666; }
+    .pipeline-card .tag { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 4px; margin-top: 4px; }
+    .tag-painter { background: #6c63ff22; color: #a89cff; border: 1px solid #6c63ff44; }
+    .tag-plumber { background: #00d4aa22; color: #00d4aa; border: 1px solid #00d4aa44; }
+    .tag-landscaper { background: #ffd70022; color: #ffd700; border: 1px solid #ffd70044; }
+    .tag-cafe { background: #ff6b6b22; color: #ff6b6b; border: 1px solid #ff6b6b44; }
+    .tag-salon { background: #ff69b422; color: #ff69b4; border: 1px solid #ff69b444; }
+    .tag-cleaner { background: #00bfff22; color: #00bfff; border: 1px solid #00bfff44; }
+
+    .col-prospect h4 { color: #555; }
+    .col-emailed h4 { color: #6c63ff; }
+    .col-replied h4 { color: #00d4aa; }
+    .col-interested h4 { color: #ffd700; }
+    .col-closed h4 { color: #00ff88; }
+
+    .action-box { background: #1a1a2e; border: 1px solid #6c63ff44; border-radius: 12px; padding: 20px 24px; margin-bottom: 28px; }
+    .action-box h3 { font-size: 14px; font-weight: 700; color: #a89cff; margin-bottom: 14px; }
+    .action-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #ffffff08; }
+    .action-item:last-child { border-bottom: none; }
+    .action-day { font-size: 11px; color: #6c63ff; font-weight: 600; min-width: 40px; padding-top: 2px; }
+    .action-text { font-size: 13px; color: #ccc; line-height: 1.5; }
+    .action-text strong { color: #fff; }
+    .done-badge { font-size: 10px; background: #00ff8822; color: #00ff88; border: 1px solid #00ff8844; padding: 1px 6px; border-radius: 4px; }
+    .pending-badge { font-size: 10px; background: #ffd70022; color: #ffd700; border: 1px solid #ffd70044; padding: 1px 6px; border-radius: 4px; }
+
+    .log { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; }
+    .log h3 { font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
+    .log-entry { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid #ffffff06; font-size: 12px; }
+    .log-entry:last-child { border-bottom: none; }
+    .log-time { color: #555; min-width: 80px; }
+    .log-msg { color: #aaa; }
+    .log-msg .highlight { color: #6c63ff; }
+    .log-msg .success { color: #00ff88; }
+    .log-msg .reply { color: #00d4aa; }
+
+    .refresh-note { text-align: center; font-size: 11px; color: #444; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>AJScalesX — Outreach Dashboard</h1>
+  <div class="goal">7-Day Goal: <span>$1,000</span></div>
+</div>
+
+<!-- Day Banner -->
+<div class="day-banner">
+  <span class="day-badge">DAY 1</span>
+  <div class="day-text">
+    <strong>Monday 30 June 2026</strong> — Campaign launched. 3 emails sent.
+    Target today: send 15+ more.
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card stat-sent">
+    <div class="number" id="stat-sent">3</div>
+    <div class="label">Emails Sent</div>
+  </div>
+  <div class="stat-card stat-replied">
+    <div class="number" id="stat-replied">0</div>
+    <div class="label">Replies</div>
+  </div>
+  <div class="stat-card stat-interested">
+    <div class="number" id="stat-interested">0</div>
+    <div class="label">Interested</div>
+  </div>
+  <div class="stat-card stat-closed">
+    <div class="number" id="stat-closed">0</div>
+    <div class="label">Clients Closed</div>
+  </div>
+  <div class="stat-card stat-revenue">
+    <div class="number" id="stat-revenue">$0</div>
+    <div class="label">Revenue</div>
+  </div>
+</div>
+
+<!-- Progress to Goal -->
+<div class="progress-bar-wrap">
+  <h3>Progress to $1,000 Goal</h3>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+  </div>
+  <div class="progress-labels">
+    <span>$0</span>
+    <span>$250</span>
+    <span>$500</span>
+    <span>$750</span>
+    <span>$1,000</span>
+  </div>
+</div>
+
+<!-- Pipeline -->
+<div class="pipeline">
+
+  <div class="pipeline-col col-prospect">
+    <h4>Prospect <span class="count" id="count-prospect">1</span></h4>
+    <div class="pipeline-card">
+      <div class="biz">YB Painting Services</div>
+      <div class="detail">Brisbane — has website (low priority)</div>
+      <span class="tag tag-painter">Painter</span>
+    </div>
+  </div>
+
+  <div class="pipeline-col col-emailed">
+    <h4>Emailed <span class="count" id="count-emailed">3</span></h4>
+    <div class="pipeline-card">
+      <div class="biz">Isle Plumbers & Gas</div>
+      <div class="detail">Martin Newton · newpipe@bigpond.com</div>
+      <span class="tag tag-plumber">Plumber</span>
+    </div>
+    <div class="pipeline-card">
+      <div class="biz">Shelley Contracting</div>
+      <div class="detail">Steven Shelley · info@shelleycontracting.com.au</div>
+      <span class="tag tag-painter">Painter</span>
+    </div>
+    <div class="pipeline-card">
+      <div class="biz">Home & Garden Landscaping</div>
+      <div class="detail">Gold Coast · homeandgarden.goldcoast@gmail.com</div>
+      <span class="tag tag-landscaper">Landscaper</span>
+    </div>
+  </div>
+
+  <div class="pipeline-col col-replied">
+    <h4>Replied <span class="count" id="count-replied">0</span></h4>
+    <div style="font-size:12px; color:#444; text-align:center; padding:20px 0;">Waiting for replies...</div>
+  </div>
+
+  <div class="pipeline-col col-interested">
+    <h4>Interested <span class="count" id="count-interested">0</span></h4>
+    <div style="font-size:12px; color:#444; text-align:center; padding:20px 0;">None yet</div>
+  </div>
+
+  <div class="pipeline-col col-closed">
+    <h4>Closed Won <span class="count" id="count-closed">0</span></h4>
+    <div style="font-size:12px; color:#444; text-align:center; padding:20px 0;">None yet</div>
+  </div>
+
+</div>
+
+<!-- Today's Actions -->
+<div class="action-box">
+  <h3>📋 Your Actions This Week</h3>
+
+  <div class="action-item">
+    <div class="action-day">DAY 1<br>Today</div>
+    <div class="action-text">
+      <span class="done-badge">✓ DONE</span> 3 emails sent (Martin, Steven, Home & Garden)<br>
+      <span class="pending-badge">TODO</span> <strong>Find 15+ more prospects on Google Maps</strong> — search "painter springwood brisbane", "landscaper coomera gold coast", "cleaner ipswich qld" — look for listings with NO website button
+    </div>
+  </div>
+
+  <div class="action-item">
+    <div class="action-day">DAY 2<br>Tue 1 Jul</div>
+    <div class="action-text">
+      Check for replies first thing. Find 20 new prospects (electricians, carpenters). Send 20 emails. Try Facebook DM outreach.
+    </div>
+  </div>
+
+  <div class="action-item">
+    <div class="action-day">DAY 3<br>Wed 2 Jul</div>
+    <div class="action-text">
+      Send follow-up to Day 1 non-responders. New niche: cafes + restaurants. Send 20 emails.
+    </div>
+  </div>
+
+  <div class="action-item">
+    <div class="action-day">DAY 4<br>Thu 3 Jul</div>
+    <div class="action-text">
+      Follow up Day 2. New niche: hair salons + beauty. Target: book 1 call today.
+    </div>
+  </div>
+
+  <div class="action-item">
+    <div class="action-day">DAY 5<br>Fri 4 Jul</div>
+    <div class="action-text">
+      <strong>Close day.</strong> Get deposits ($250) from any warm leads. Start building website #1.
+    </div>
+  </div>
+
+  <div class="action-item">
+    <div class="action-day">DAY 6-7<br>Weekend</div>
+    <div class="action-text">
+      Build + deliver website #1. Post in Facebook business groups for extra leads. Collect final payments.
+    </div>
+  </div>
+</div>
+
+<!-- Activity Log -->
+<div class="log">
+  <h3>Activity Log</h3>
+  <div class="log-entry">
+    <div class="log-time">30 Jun · 2026</div>
+    <div class="log-msg"><span class="highlight">Campaign launched.</span> Outreach system created. Email templates, action plan, prospect guide saved to repo.</div>
+  </div>
+  <div class="log-entry">
+    <div class="log-time">30 Jun · Today</div>
+    <div class="log-msg"><span class="highlight">3 emails sent</span> — Isle Plumbers & Gas, Shelley Contracting, Home & Garden Landscaping.</div>
+  </div>
+</div>
+
+<div class="refresh-note">Tell AJ "check for replies" or "update my dashboard" at any time to get a live status update.</div>
+
+</body>
+</html>
