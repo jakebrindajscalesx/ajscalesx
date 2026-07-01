@@ -59,9 +59,9 @@ Full summary: posts published, follower growth, email list size, affiliate statu
 
 | Stage | Status |
 |-------|--------|
-| Account created | Not yet |
-| Professional/Business mode | Not yet |
-| Link-in-bio set up | Not yet |
+| Account created | ✅ @steal_mysystem |
+| Professional/Business mode | Pending confirmation |
+| Link-in-bio set up | Pending confirmation |
 | Email capture set up | Not yet |
 | Videos posted | 0 / 15 (Batch 1) |
 | Affiliate programs approved | 0 |
@@ -69,4 +69,4 @@ Full summary: posts published, follower growth, email list size, affiliate statu
 | **Revenue** | **$0** |
 
 **Last updated:** 1 July 2026
-**Day:** 0 of 30 (pre-launch)
+**Day:** 1 of 30

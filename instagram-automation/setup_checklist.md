@@ -5,7 +5,7 @@ I can write scripts, captions, and manage the tracking dashboard, but the steps 
 ---
 
 ## STEP 1 — Create the Instagram account
-- [ ] Pick a handle (see ideas in `business_plan.md` — check availability in the IG app)
+- [x] Pick a handle — **@steal_mysystem**
 - [ ] Sign up with a dedicated email (not your personal one) — recommend a free Gmail/Outlook just for this business
 - [ ] Write a bio: one line on what the account does + "link below" pointing at your future link-in-bio page
 - [ ] Add a profile photo/logo (Canva → simple wordmark is fine, no face needed)

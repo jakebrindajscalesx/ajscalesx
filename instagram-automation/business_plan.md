@@ -18,7 +18,7 @@ This works because:
 - **Clear monetization hook** — every video naturally points at an app (Notion, Todoist, Google Calendar), a physical product (desk organizer, planner, monitor stand), or a digital template we can sell later.
 - **Low production bar** — screen recordings + voiceover + text overlays. No face, no location, no expensive gear. CapCut (free) covers 90% of it.
 
-**Working handle concept:** something like `@systemstacked`, `@dailysystemhacks`, or `@lazyproductivity` — final handle to be picked at account-creation step (see `setup_checklist.md`), since availability needs checking live.
+**Handle:** `@steal_mysystem` — account created 1 July 2026.
 
 ---
 
