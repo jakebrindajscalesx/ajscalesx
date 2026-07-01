@@ -18,11 +18,12 @@
     .day-text { font-size: 14px; color: #aaa; }
     .day-text strong { color: #fff; }
 
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 32px; }
     .stat-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; text-align: center; }
     .stat-card .number { font-size: 36px; font-weight: 800; margin-bottom: 4px; }
     .stat-card .label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
     .stat-sent .number { color: #6c63ff; }
+    .stat-calllist .number { color: #ff9900; }
     .stat-replied .number { color: #00d4aa; }
     .stat-interested .number { color: #ffd700; }
     .stat-closed .number { color: #00ff88; }
@@ -34,37 +35,54 @@
     .progress-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, #6c63ff, #00d4aa); transition: width 0.5s; }
     .progress-labels { display: flex; justify-content: space-between; font-size: 12px; color: #666; }
 
-    .pipeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 32px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+    @media(max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+    .pipeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 28px; }
     .pipeline-col { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 16px; }
     .pipeline-col h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
     .pipeline-col h4 .count { background: #2a2a2a; border-radius: 20px; padding: 1px 8px; font-size: 11px; color: #aaa; }
-    .pipeline-card { background: #222; border: 1px solid #333; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; transition: border-color 0.2s; }
-    .pipeline-card:hover { border-color: #6c63ff; }
+    .pipeline-card { background: #222; border: 1px solid #333; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
     .pipeline-card .biz { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 2px; }
     .pipeline-card .detail { font-size: 11px; color: #666; }
     .pipeline-card .tag { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 4px; margin-top: 4px; }
     .tag-painter { background: #6c63ff22; color: #a89cff; border: 1px solid #6c63ff44; }
     .tag-plumber { background: #00d4aa22; color: #00d4aa; border: 1px solid #00d4aa44; }
     .tag-landscaper { background: #ffd70022; color: #ffd700; border: 1px solid #ffd70044; }
-    .tag-cafe { background: #ff6b6b22; color: #ff6b6b; border: 1px solid #ff6b6b44; }
-    .tag-salon { background: #ff69b422; color: #ff69b4; border: 1px solid #ff69b444; }
-    .tag-cleaner { background: #00bfff22; color: #00bfff; border: 1px solid #00bfff44; }
+    .tag-dead { background: #ff000022; color: #ff6666; border: 1px solid #ff000044; }
 
-    .col-prospect h4 { color: #555; }
     .col-emailed h4 { color: #6c63ff; }
+    .col-calllist h4 { color: #ff9900; }
     .col-replied h4 { color: #00d4aa; }
     .col-interested h4 { color: #ffd700; }
     .col-closed h4 { color: #00ff88; }
+
+    .call-box { background: #1a1200; border: 1px solid #ff990044; border-radius: 12px; padding: 20px; }
+    .call-box h3 { font-size: 14px; font-weight: 700; color: #ff9900; margin-bottom: 14px; }
+    .call-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #ffffff08; }
+    .call-item:last-child { border-bottom: none; }
+    .call-biz { font-size: 13px; font-weight: 600; color: #fff; }
+    .call-detail { font-size: 11px; color: #888; margin-top: 2px; }
+    .call-number { font-size: 14px; font-weight: 700; color: #ff9900; text-align: right; }
+    .call-badge { font-size: 10px; padding: 1px 6px; border-radius: 4px; margin-top: 3px; display: block; text-align: right; }
+    .badge-noweb { background: #ff000022; color: #ff6666; border: 1px solid #ff000044; }
+    .badge-deadweb { background: #ff6b0022; color: #ff9900; border: 1px solid #ff6b0044; }
 
     .action-box { background: #1a1a2e; border: 1px solid #6c63ff44; border-radius: 12px; padding: 20px 24px; margin-bottom: 28px; }
     .action-box h3 { font-size: 14px; font-weight: 700; color: #a89cff; margin-bottom: 14px; }
     .action-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #ffffff08; }
     .action-item:last-child { border-bottom: none; }
-    .action-day { font-size: 11px; color: #6c63ff; font-weight: 600; min-width: 40px; padding-top: 2px; }
+    .action-day { font-size: 11px; color: #6c63ff; font-weight: 600; min-width: 45px; padding-top: 2px; }
     .action-text { font-size: 13px; color: #ccc; line-height: 1.5; }
     .action-text strong { color: #fff; }
     .done-badge { font-size: 10px; background: #00ff8822; color: #00ff88; border: 1px solid #00ff8844; padding: 1px 6px; border-radius: 4px; }
     .pending-badge { font-size: 10px; background: #ffd70022; color: #ffd700; border: 1px solid #ffd70044; padding: 1px 6px; border-radius: 4px; }
+    .urgent-badge { font-size: 10px; background: #ff000022; color: #ff6666; border: 1px solid #ff000044; padding: 1px 6px; border-radius: 4px; }
+
+    .script-box { background: #0f1a0f; border: 1px solid #00ff8833; border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+    .script-box h3 { font-size: 14px; font-weight: 700; color: #00ff88; margin-bottom: 12px; }
+    .script-text { font-size: 13px; color: #aaa; line-height: 1.8; font-style: italic; }
+    .script-text strong { color: #00ff88; font-style: normal; }
 
     .log { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; }
     .log h3 { font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
@@ -74,7 +92,7 @@
     .log-msg { color: #aaa; }
     .log-msg .highlight { color: #6c63ff; }
     .log-msg .success { color: #00ff88; }
-    .log-msg .reply { color: #00d4aa; }
+    .log-msg .warn { color: #ff9900; }
 
     .refresh-note { text-align: center; font-size: 11px; color: #444; margin-top: 20px; }
   </style>
@@ -86,164 +104,248 @@
   <div class="goal">7-Day Goal: <span>$1,000</span></div>
 </div>
 
-<!-- Day Banner -->
 <div class="day-banner">
-  <span class="day-badge">DAY 1</span>
+  <span class="day-badge">DAY 2</span>
   <div class="day-text">
-    <strong>Monday 30 June 2026</strong> — Campaign launched. 3 emails sent.
-    Target today: send 15+ more.
+    <strong>Tuesday 1 July 2026</strong> — 6 emails sent. 6 businesses on call list. No replies yet (normal).
+    Priority today: <strong>call the no-website businesses below.</strong>
   </div>
 </div>
 
 <!-- Stats -->
 <div class="stats-grid">
   <div class="stat-card stat-sent">
-    <div class="number" id="stat-sent">3</div>
+    <div class="number">6</div>
     <div class="label">Emails Sent</div>
   </div>
+  <div class="stat-card stat-calllist">
+    <div class="number">6</div>
+    <div class="label">Call List</div>
+  </div>
   <div class="stat-card stat-replied">
-    <div class="number" id="stat-replied">0</div>
+    <div class="number">0</div>
     <div class="label">Replies</div>
   </div>
   <div class="stat-card stat-interested">
-    <div class="number" id="stat-interested">0</div>
+    <div class="number">0</div>
     <div class="label">Interested</div>
   </div>
   <div class="stat-card stat-closed">
-    <div class="number" id="stat-closed">0</div>
-    <div class="label">Clients Closed</div>
+    <div class="number">0</div>
+    <div class="label">Closed</div>
   </div>
   <div class="stat-card stat-revenue">
-    <div class="number" id="stat-revenue">$0</div>
+    <div class="number">$0</div>
     <div class="label">Revenue</div>
   </div>
 </div>
 
-<!-- Progress to Goal -->
+<!-- Progress -->
 <div class="progress-bar-wrap">
   <h3>Progress to $1,000 Goal</h3>
-  <div class="progress-bar">
-    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
-  </div>
-  <div class="progress-labels">
-    <span>$0</span>
-    <span>$250</span>
-    <span>$500</span>
-    <span>$750</span>
-    <span>$1,000</span>
-  </div>
+  <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
+  <div class="progress-labels"><span>$0</span><span>$250</span><span>$500</span><span>$750</span><span>$1,000</span></div>
 </div>
 
-<!-- Pipeline -->
-<div class="pipeline">
+<div class="two-col">
 
-  <div class="pipeline-col col-prospect">
-    <h4>Prospect <span class="count" id="count-prospect">1</span></h4>
-    <div class="pipeline-card">
-      <div class="biz">YB Painting Services</div>
-      <div class="detail">Brisbane — has website (low priority)</div>
-      <span class="tag tag-painter">Painter</span>
+  <!-- Email Pipeline -->
+  <div>
+    <div class="pipeline" style="grid-template-columns:1fr 1fr; margin-bottom:0;">
+
+      <div class="pipeline-col col-emailed">
+        <h4>Emailed <span class="count">6</span></h4>
+        <div class="pipeline-card">
+          <div class="biz">Isle Plumbers & Gas</div>
+          <div class="detail">Martin · newpipe@bigpond.com</div>
+          <span class="tag tag-plumber">Plumber</span>
+        </div>
+        <div class="pipeline-card">
+          <div class="biz">Shelley Contracting</div>
+          <div class="detail">Steven · info@shelleycontracting.com.au</div>
+          <span class="tag tag-painter">Painter</span>
+        </div>
+        <div class="pipeline-card">
+          <div class="biz">LMF Painters GC</div>
+          <div class="detail">lmfgoldcoastpainters@gmail.com</div>
+          <span class="tag tag-painter">Painter</span>
+        </div>
+        <div class="pipeline-card">
+          <div class="biz">TL Painting</div>
+          <div class="detail">Tim · tlpaintinggc@gmail.com</div>
+          <span class="tag tag-painter">Painter</span>
+        </div>
+        <div class="pipeline-card">
+          <div class="biz">C Price Landscapes</div>
+          <div class="detail">cpricelandscaping@gmail.com</div>
+          <span class="tag tag-landscaper">Landscaper</span>
+        </div>
+      </div>
+
+      <div class="pipeline-col col-replied">
+        <h4>Replied <span class="count">0</span></h4>
+        <div style="font-size:12px; color:#444; text-align:center; padding:20px 0;">Waiting...</div>
+      </div>
+
     </div>
   </div>
 
-  <div class="pipeline-col col-emailed">
-    <h4>Emailed <span class="count" id="count-emailed">3</span></h4>
-    <div class="pipeline-card">
-      <div class="biz">Isle Plumbers & Gas</div>
-      <div class="detail">Martin Newton · newpipe@bigpond.com</div>
-      <span class="tag tag-plumber">Plumber</span>
+  <!-- Call List -->
+  <div class="call-box">
+    <h3>📞 Call List — Priority Targets (No Website)</h3>
+
+    <div class="call-item">
+      <div>
+        <div class="call-biz">D.M. & J.P. Ball</div>
+        <div class="call-detail">Painter · Redland Bay · NO WEBSITE</div>
+      </div>
+      <div>
+        <div class="call-number">07 3206 8019</div>
+        <span class="call-badge badge-noweb">No website</span>
+      </div>
     </div>
-    <div class="pipeline-card">
-      <div class="biz">Shelley Contracting</div>
-      <div class="detail">Steven Shelley · info@shelleycontracting.com.au</div>
-      <span class="tag tag-painter">Painter</span>
+
+    <div class="call-item">
+      <div>
+        <div class="call-biz">C.M. Poulter</div>
+        <div class="call-detail">Painter · Alexandra Hills · No website found</div>
+      </div>
+      <div>
+        <div class="call-number">0437 320 701</div>
+        <span class="call-badge badge-noweb">No website</span>
+      </div>
     </div>
-    <div class="pipeline-card">
-      <div class="biz">Home & Garden Landscaping</div>
-      <div class="detail">Gold Coast · homeandgarden.goldcoast@gmail.com</div>
-      <span class="tag tag-landscaper">Landscaper</span>
+
+    <div class="call-item">
+      <div>
+        <div class="call-biz">DDF Painting</div>
+        <div class="call-detail">Don Fitzgerald · Capalaba · DEAD website</div>
+      </div>
+      <div>
+        <div class="call-number">0413 731 467</div>
+        <span class="call-badge badge-deadweb">Dead website 🔥</span>
+      </div>
+    </div>
+
+    <div class="call-item">
+      <div>
+        <div class="call-biz">Fida Painting</div>
+        <div class="call-detail">Fida Haidari · Edens Landing · Facebook only</div>
+      </div>
+      <div>
+        <div class="call-number">0470245101</div>
+        <span class="call-badge badge-noweb">No website</span>
+      </div>
+    </div>
+
+    <div class="call-item">
+      <div>
+        <div class="call-biz">Simplicity Painting</div>
+        <div class="call-detail">Painter · Toowoomba · check website</div>
+      </div>
+      <div>
+        <div class="call-number">0408 459 228</div>
+        <span class="call-badge badge-noweb">Check first</span>
+      </div>
+    </div>
+
+    <div class="call-item">
+      <div>
+        <div class="call-biz">Trinity Landscape</div>
+        <div class="call-detail">Landscaper · Cairns · basic website</div>
+      </div>
+      <div>
+        <div class="call-number">0481 113 793</div>
+        <span class="call-badge badge-deadweb">Upgrade pitch</span>
+      </div>
     </div>
   </div>
 
-  <div class="pipeline-col col-replied">
-    <h4>Replied <span class="count" id="count-replied">0</span></h4>
-    <div style="font-size:12px; color:#444; text-align:center; padding:20px 0;">Waiting for replies...</div>
-  </div>
+</div>
 
-  <div class="pipeline-col col-interested">
-    <h4>Interested <span class="count" id="count-interested">0</span></h4>
-    <div style="font-size:12px; color:#444; text-align:center; padding:20px 0;">None yet</div>
+<!-- Call Script -->
+<div class="script-box">
+  <h3>📋 Call Script — Use This Word for Word</h3>
+  <div class="script-text">
+    "Hey, is this <strong>[Name]</strong>? Great — I'm AJ calling from AJScalesX. I build websites for Queensland tradies and I noticed <strong>[Business Name]</strong> doesn't have a website yet. I just wanted to ask — are you getting enough work at the moment, or would more enquiries from Google be helpful?
+    <br><br>
+    ... <em>(let them answer)</em> ...
+    <br><br>
+    I build a clean 5-page website for $500, done in 5 days. Most tradies start getting Google enquiries within a few weeks of going live. Would it be worth me sending you a free mock-up of what it could look like — no commitment, just so you can see it?"
+    <br><br>
+    <strong>If yes:</strong> "Perfect — what's the best email to send it to?"<br>
+    <strong>If not now:</strong> "No worries — can I send you a quick email with more info for when you're ready?"
   </div>
-
-  <div class="pipeline-col col-closed">
-    <h4>Closed Won <span class="count" id="count-closed">0</span></h4>
-    <div style="font-size:12px; color:#444; text-align:center; padding:20px 0;">None yet</div>
-  </div>
-
 </div>
 
 <!-- Today's Actions -->
 <div class="action-box">
-  <h3>📋 Your Actions This Week</h3>
+  <h3>📋 Today's Priority Actions — Day 2</h3>
 
   <div class="action-item">
-    <div class="action-day">DAY 1<br>Today</div>
+    <div class="action-day">NOW</div>
     <div class="action-text">
-      <span class="done-badge">✓ DONE</span> 3 emails sent (Martin, Steven, Home & Garden)<br>
-      <span class="pending-badge">TODO</span> <strong>Find 15+ more prospects on Google Maps</strong> — search "painter springwood brisbane", "landscaper coomera gold coast", "cleaner ipswich qld" — look for listings with NO website button
+      <span class="urgent-badge">URGENT</span> <strong>Call DDF Painting (Don Fitzgerald) — 0413 731 467</strong><br>
+      His website domain is completely dead. He has NO online presence. Perfect prospect. Call using the script above.
     </div>
   </div>
 
   <div class="action-item">
-    <div class="action-day">DAY 2<br>Tue 1 Jul</div>
+    <div class="action-day">TODAY</div>
     <div class="action-text">
-      Check for replies first thing. Find 20 new prospects (electricians, carpenters). Send 20 emails. Try Facebook DM outreach.
+      <span class="pending-badge">TODO</span> Call the other 5 businesses on the call list. Even 2-3 calls could land you a client today.
     </div>
   </div>
 
   <div class="action-item">
-    <div class="action-day">DAY 3<br>Wed 2 Jul</div>
+    <div class="action-day">TODAY</div>
     <div class="action-text">
-      Send follow-up to Day 1 non-responders. New niche: cafes + restaurants. Send 20 emails.
+      <span class="pending-badge">TODO</span> <strong>Review + Send all 6 Gmail drafts</strong> — open Gmail → Drafts → review each → Send
     </div>
   </div>
 
   <div class="action-item">
-    <div class="action-day">DAY 4<br>Thu 3 Jul</div>
+    <div class="action-day">TODAY</div>
     <div class="action-text">
-      Follow up Day 2. New niche: hair salons + beauty. Target: book 1 call today.
+      <span class="pending-badge">TODO</span> <strong>Fix your domain verification</strong> — check inbox for Google Workspace email about ajscalesx.com suspension risk. Click the verification link.
     </div>
   </div>
 
   <div class="action-item">
-    <div class="action-day">DAY 5<br>Fri 4 Jul</div>
+    <div class="action-day">DAY 3<br>Wed</div>
     <div class="action-text">
-      <strong>Close day.</strong> Get deposits ($250) from any warm leads. Start building website #1.
+      Send follow-up to Day 1 prospects (Martin & Steven). New niche outreach: cafes + restaurants. Find 15 more via Google Maps.
     </div>
   </div>
 
-  <div class="action-item">
-    <div class="action-day">DAY 6-7<br>Weekend</div>
-    <div class="action-text">
-      Build + deliver website #1. Post in Facebook business groups for extra leads. Collect final payments.
-    </div>
-  </div>
 </div>
 
 <!-- Activity Log -->
 <div class="log">
   <h3>Activity Log</h3>
   <div class="log-entry">
-    <div class="log-time">30 Jun · 2026</div>
-    <div class="log-msg"><span class="highlight">Campaign launched.</span> Outreach system created. Email templates, action plan, prospect guide saved to repo.</div>
+    <div class="log-time">30 Jun</div>
+    <div class="log-msg"><span class="highlight">Campaign launched.</span> System created, templates written, first 3 emails drafted.</div>
   </div>
   <div class="log-entry">
-    <div class="log-time">30 Jun · Today</div>
-    <div class="log-msg"><span class="highlight">3 emails sent</span> — Isle Plumbers & Gas, Shelley Contracting, Home & Garden Landscaping.</div>
+    <div class="log-time">30 Jun</div>
+    <div class="log-msg">3 emails sent — Isle Plumbers, Shelley Contracting, Home & Garden (bounced).</div>
+  </div>
+  <div class="log-entry">
+    <div class="log-time">1 Jul</div>
+    <div class="log-msg"><span class="warn">Home & Garden Landscaping email BOUNCED</span> — address invalid. Removed.</div>
+  </div>
+  <div class="log-entry">
+    <div class="log-time">1 Jul</div>
+    <div class="log-msg"><span class="highlight">3 new email drafts created</span> — LMF Painters GC, TL Painting, C Price Landscapes. Ready to send.</div>
+  </div>
+  <div class="log-entry">
+    <div class="log-time">1 Jul</div>
+    <div class="log-msg"><span class="highlight">Call list built</span> — 6 phone-only prospects found, all with no/dead website. DDF Painting is top priority (dead domain).</div>
   </div>
 </div>
 
-<div class="refresh-note">Tell AJ "check for replies" or "update my dashboard" at any time to get a live status update.</div>
+<div class="refresh-note">Tell AJ "check for replies", "add a prospect", "I closed [name]", or "how are we tracking" at any time.</div>
 
 </body>
 </html>

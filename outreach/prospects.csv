@@ -1,5 +1,13 @@
-id,business_name,contact_name,email,phone,city,state,niche,has_website,website_url,facebook_url,source,status,notes,date_added,follow_up_date
-1,Isle Plumbers & Gas,Martin Newton,newpipe@bigpond.com,,,Coochiemudlo Island,QLD,Plumber,No,,https://coochiemudloisland.com.au/business-directory,Coochiemudlo Directory,Prospect,,2026-06-30,2026-07-02
-2,Shelley Contracting,Steven Shelley,info@shelleycontracting.com.au,,,Coochiemudlo Island,QLD,Painter,Unknown,,,Coochiemudlo Directory,Prospect,,2026-06-30,2026-07-02
-3,Home & Garden Landscaping,,homeandgarden.goldcoast@gmail.com,,,Gold Coast,QLD,Landscaper,No,,,Web Search,Prospect,,2026-06-30,2026-07-02
-4,YB Painting Services,,mta03084@bigpond.net.au,,,Brisbane,QLD,Painter,Yes,https://www.ybpainting.com.au,,Web Search,Low Priority,Has website - check if outdated,2026-06-30,
+id,business_name,contact_name,email,phone,city,state,niche,has_website,website_url,source,status,notes,date_added,follow_up_date
+1,Isle Plumbers & Gas,Martin Newton,newpipe@bigpond.com,,Coochiemudlo Island,QLD,Plumber,No,,Coochiemudlo Directory,Emailed,,2026-06-30,2026-07-03
+2,Shelley Contracting,Steven Shelley,info@shelleycontracting.com.au,,Coochiemudlo Island,QLD,Painter,Unknown,,Coochiemudlo Directory,Emailed,,2026-06-30,2026-07-03
+3,Home & Garden Landscaping,,,, Gold Coast,QLD,Landscaper,No,,Web Search,Bounced,Email invalid - remove,2026-06-30,
+4,LMF Painters Gold Coast,,lmfgoldcoastpainters@gmail.com,0493 260 493,Gold Coast,QLD,Painter,Yes,https://lmfpaintersgoldcoast.com.au,Web Search,Emailed,Has website - redesign pitch,2026-07-01,2026-07-04
+5,TL Painting,Tim,tlpaintinggc@gmail.com,0435 855 005,Coomera Gold Coast,QLD,Painter,Yes,https://www.tlpainting.com.au,Web Search,Emailed,Has website - redesign pitch,2026-07-01,2026-07-04
+6,C Price Landscapes,,cpricelandscaping@gmail.com,0405 414 298,Brisbane,QLD,Landscaper,Yes,https://www.cpricelandscapes.com,Web Search,Emailed,Has website - redesign pitch,2026-07-01,2026-07-04
+7,D.M. & J.P. Ball,,CALL ONLY,07 3206 8019,Redland Bay,QLD,Painter,No,,Brisbane Bayside Directory,Call List,NO WEBSITE - call first,2026-07-01,2026-07-01
+8,C.M. Poulter,,CALL ONLY,0437 320 701,Alexandra Hills,QLD,Painter,Unknown,,Brisbane Bayside Directory,Call List,No website found - call,2026-07-01,2026-07-01
+9,DDF Painting (Don Fitzgerald),,CALL ONLY,0413 731 467,Capalaba,QLD,Painter,Dead,,Web Search,Call List,DEAD WEBSITE - urgent prospect,2026-07-01,2026-07-01
+10,Fida Painting,Fida Haidari,CALL ONLY,0470245101,Edens Landing,QLD,Painter,No (Facebook only),https://www.facebook.com/Fida-painting-532160457127474/,Oneflare,Call List,Facebook only - NO WEBSITE,2026-07-01,2026-07-01
+11,Simplicity Painting,,CALL ONLY,0408 459 228,Toowoomba,QLD,Painter,Unknown,,Web Search,Call List,Check if has website before calling,2026-07-01,2026-07-01
+12,Trinity Landscape Cairns,,CALL ONLY,0481 113 793,Cairns,QLD,Landscaper,Yes,https://www.trinitylandscapecairns.com.au,Web Search,Call List,Has basic website - redesign pitch,2026-07-01,2026-07-02
