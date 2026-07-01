@@ -59,15 +59,18 @@ I'll update the dashboard, mark them as Closed Won, update revenue, and prep the
 
 | Stage | Count | Names |
 |-------|-------|-------|
-| Prospect | 1 | YB Painting (low pri) |
-| Emailed | 3 | Martin (Isle Plumbers), Steven (Shelley), Home & Garden |
+| Emailed | 5 | Martin (Isle Plumbers), Steven (Shelley), LMF Painters GC, TL Painting (Tim), C Price Landscapes |
+| Call List | 6 | DDF Painting 🔥, Fida Painting, D.M. & J.P. Ball, C.M. Poulter, Simplicity Painting, Trinity Landscape |
 | Replied | 0 | — |
 | Interested | 0 | — |
 | Closed Won | 0 | — |
 | **Revenue** | **$0** | **Goal: $1,000** |
 
-**Last updated:** 30 June 2026
-**Day:** 1 of 7
+**Last updated:** 1 July 2026 (latest check-in)
+**Day:** 2 of 7
+**Emails confirmed sent:** 6 ✅ (verified in Gmail Sent)
+**Drafts pending:** 0
+**Bounces:** 1 (Home & Garden - bad address, removed)
 
 ---
 
