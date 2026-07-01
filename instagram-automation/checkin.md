@@ -60,8 +60,8 @@ Full summary: posts published, follower growth, email list size, affiliate statu
 | Stage | Status |
 |-------|--------|
 | Account created | ✅ @steal_mysystem |
-| Professional/Business mode | Pending confirmation |
-| Link-in-bio set up | Pending confirmation |
+| Professional/Business mode | ✅ Business account |
+| Link-in-bio set up | Not yet |
 | Email capture set up | Not yet |
 | Videos posted | 0 / 15 (Batch 1) |
 | Affiliate programs approved | 0 |

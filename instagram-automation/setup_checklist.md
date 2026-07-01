@@ -11,9 +11,9 @@ I can write scripts, captions, and manage the tracking dashboard, but the steps 
 - [ ] Add a profile photo/logo (Canva → simple wordmark is fine, no face needed)
 
 ## STEP 2 — Switch to a Professional account
-- [ ] Settings → Account type and tools → Switch to Professional Account
-- [ ] Choose **Creator** or **Business** (Business unlocks more analytics + is required for API access later)
-- [ ] Category: "Digital creator" or "Blogger" both work fine
+- [x] Settings → Account type and tools → Switch to Professional Account
+- [x] Chose **Business** (unlocks Meta Business Suite, branded-content tagging, and API access later)
+- [x] Category: "Digital creator"
 
 ## STEP 3 — Link-in-bio + email capture
 - [ ] Create a free Beacons.ai or Linktree page
