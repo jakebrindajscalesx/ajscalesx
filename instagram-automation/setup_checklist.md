@@ -16,9 +16,11 @@ I can write scripts, captions, and manage the tracking dashboard, but the steps 
 - [x] Category: "Digital creator"
 
 ## STEP 3 — Link-in-bio + email capture
-- [ ] Create a free Beacons.ai or Linktree page
+- [x] Create a free Beacons.ai or Linktree page — Beacons account created
 - [ ] Add a placeholder lead magnet link (we'll build the actual PDF/template together once you're set up — tell me "build the lead magnet" and I'll draft it)
-- [ ] Sign up for Beehiiv or ConvertKit free tier, connect the signup form to your link-in-bio page
+- [x] Email capture landing page — Kit (free plan): https://sunny-builder-9485.kit.com/2d650e5a71
+- [ ] Add the Kit landing page link as a button in Beacons
+- [ ] Put the Beacons page URL in the Instagram bio for @steal_mysystem
 
 ## STEP 4 — Affiliate program applications
 - [ ] Amazon Associates — sign up at Amazon's official affiliate program page (search "Amazon Associates" from your Amazon account, it's under Amazon's own site — don't use a third-party link)

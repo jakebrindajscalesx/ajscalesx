@@ -61,8 +61,8 @@ Full summary: posts published, follower growth, email list size, affiliate statu
 |-------|--------|
 | Account created | ✅ @steal_mysystem |
 | Professional/Business mode | ✅ Business account |
-| Link-in-bio set up | Not yet |
-| Email capture set up | Not yet |
+| Link-in-bio set up | Beacons created, Kit link not added yet |
+| Email capture set up | ✅ Kit landing page live: https://sunny-builder-9485.kit.com/2d650e5a71 |
 | Videos posted | 0 / 15 (Batch 1) |
 | Affiliate programs approved | 0 |
 | Email subscribers | 0 |
