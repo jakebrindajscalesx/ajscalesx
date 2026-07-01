@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AJScalesX CRM</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; }
+
+    /* NAV */
+    .nav { background: #111; border-bottom: 1px solid #222; padding: 0 24px; display: flex; align-items: center; gap: 0; position: sticky; top: 0; z-index: 100; }
+    .nav-brand { font-size: 15px; font-weight: 800; color: #fff; padding: 16px 24px 16px 0; border-right: 1px solid #222; margin-right: 8px; }
+    .nav-brand span { color: #6c63ff; }
+    .nav-tab { padding: 16px 16px; font-size: 13px; color: #666; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+    .nav-tab:hover { color: #aaa; }
+    .nav-tab.active { color: #fff; border-bottom-color: #6c63ff; }
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .goal-chip { background: #1a1a2e; border: 1px solid #6c63ff44; border-radius: 20px; padding: 6px 14px; font-size: 12px; color: #a89cff; }
+    .goal-chip span { color: #6c63ff; font-weight: 700; }
+    .day-chip { background: #6c63ff; color: #fff; border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 700; }
+
+    /* PAGES */
+    .page { display: none; padding: 28px 24px; max-width: 1200px; margin: 0 auto; }
+    .page.active { display: block; }
+
+    /* STATS ROW */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 28px; }
+    .stat { background: #141414; border: 1px solid #222; border-radius: 12px; padding: 18px; text-align: center; }
+    .stat .n { font-size: 32px; font-weight: 800; margin-bottom: 4px; }
+    .stat .l { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+    .c-purple { color: #6c63ff; } .c-teal { color: #00d4aa; } .c-gold { color: #ffd700; }
+    .c-green { color: #00ff88; } .c-orange { color: #ff9900; } .c-red { color: #ff6666; }
+
+    /* PROGRESS */
+    .progress-card { background: #141414; border: 1px solid #222; border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+    .progress-card h3 { font-size: 12px; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+    .progress-bar { background: #222; border-radius: 20px; height: 14px; overflow: hidden; margin-bottom: 8px; }
+    .progress-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, #6c63ff, #00d4aa); transition: width 0.6s ease; }
+    .progress-meta { display: flex; justify-content: space-between; font-size: 12px; color: #555; }
+
+    /* SECTION HEADER */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .section-header h2 { font-size: 15px; font-weight: 700; color: #fff; }
+    .section-header .sub { font-size: 12px; color: #555; }
+
+    /* MEETINGS */
+    .meetings-grid { display: grid; gap: 12px; margin-bottom: 28px; }
+    .meeting-card { background: #141414; border: 1px solid #222; border-radius: 12px; padding: 18px; display: flex; align-items: center; gap: 16px; }
+    .meeting-card.upcoming { border-left: 3px solid #6c63ff; }
+    .meeting-card.today { border-left: 3px solid #00ff88; background: #0d1a0d; }
+    .meeting-card.completed { border-left: 3px solid #333; opacity: 0.6; }
+    .meeting-date { text-align: center; min-width: 52px; background: #1a1a1a; border-radius: 10px; padding: 8px; }
+    .meeting-date .day { font-size: 22px; font-weight: 800; color: #fff; line-height: 1; }
+    .meeting-date .month { font-size: 10px; color: #666; text-transform: uppercase; margin-top: 2px; }
+    .meeting-info { flex: 1; }
+    .meeting-info .biz { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+    .meeting-info .detail { font-size: 12px; color: #666; }
+    .meeting-right { text-align: right; }
+    .meeting-time { font-size: 13px; font-weight: 600; color: #6c63ff; margin-bottom: 4px; }
+    .meeting-type { font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+    .type-call { background: #6c63ff22; color: #a89cff; border: 1px solid #6c63ff33; }
+    .type-discovery { background: #00d4aa22; color: #00d4aa; border: 1px solid #00d4aa33; }
+    .type-close { background: #ffd70022; color: #ffd700; border: 1px solid #ffd70033; }
+
+    .empty-state { background: #141414; border: 1px dashed #2a2a2a; border-radius: 12px; padding: 40px; text-align: center; color: #444; font-size: 13px; margin-bottom: 28px; }
+    .empty-state .emoji { font-size: 32px; margin-bottom: 12px; }
+    .empty-state strong { color: #666; display: block; margin-bottom: 6px; }
+
+    /* PIPELINE */
+    .pipeline { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 28px; }
+    @media(max-width: 900px) { .pipeline { grid-template-columns: 1fr 1fr; } }
+    .p-col { background: #141414; border: 1px solid #222; border-radius: 12px; padding: 14px; }
+    .p-col-head { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #555; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .p-col-head .badge { background: #222; border-radius: 10px; padding: 1px 7px; font-size: 10px; color: #666; }
+    .p-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+    .p-card:last-child { margin-bottom: 0; }
+    .p-card .name { font-size: 12px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+    .p-card .info { font-size: 11px; color: #555; margin-bottom: 5px; }
+    .p-tag { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 4px; }
+    .t-painter { background: #6c63ff22; color: #a89cff; border: 1px solid #6c63ff33; }
+    .t-plumber { background: #00d4aa22; color: #00d4aa; border: 1px solid #00d4aa33; }
+    .t-landscaper { background: #ffd70022; color: #ffd700; border: 1px solid #ffd70033; }
+    .t-cleaner { background: #00bfff22; color: #00bfff; border: 1px solid #00bfff33; }
+    .p-col-emailed .p-col-head { color: #6c63ff; }
+    .p-col-replied .p-col-head { color: #00d4aa; }
+    .p-col-interested .p-col-head { color: #ffd700; }
+    .p-col-closed .p-col-head { color: #00ff88; }
+
+    /* CLIENTS */
+    .clients-grid { display: grid; gap: 14px; margin-bottom: 28px; }
+    .client-card { background: #141414; border: 1px solid #222; border-radius: 12px; padding: 20px; }
+    .client-card.active-project { border-color: #6c63ff44; }
+    .client-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+    .client-name { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+    .client-biz { font-size: 12px; color: #666; }
+    .client-price { font-size: 20px; font-weight: 800; color: #00ff88; }
+    .client-price .sub { font-size: 11px; color: #666; font-weight: 400; }
+    .client-row { display: flex; gap: 24px; margin-bottom: 12px; }
+    .client-field { flex: 1; }
+    .client-field .fl { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+    .client-field .fv { font-size: 13px; color: #ccc; }
+    .project-bar { margin-top: 14px; }
+    .project-bar .pb-label { display: flex; justify-content: space-between; font-size: 11px; color: #555; margin-bottom: 6px; }
+    .project-bar .pb { background: #222; border-radius: 20px; height: 6px; overflow: hidden; }
+    .project-bar .pb-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, #6c63ff, #00d4aa); }
+    .status-badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; margin-top: 8px; }
+    .sb-deposit { background: #ffd70022; color: #ffd700; border: 1px solid #ffd70033; }
+    .sb-building { background: #6c63ff22; color: #a89cff; border: 1px solid #6c63ff33; }
+    .sb-review { background: #00d4aa22; color: #00d4aa; border: 1px solid #00d4aa33; }
+    .sb-complete { background: #00ff8822; color: #00ff88; border: 1px solid #00ff8833; }
+
+    /* CALL LIST */
+    .call-list { background: #140f00; border: 1px solid #ff990033; border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+    .call-list h3 { font-size: 13px; font-weight: 700; color: #ff9900; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .call-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #ffffff06; }
+    .call-item:last-child { border-bottom: none; }
+    .call-left .cn { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 2px; }
+    .call-left .cd { font-size: 11px; color: #666; }
+    .call-right { text-align: right; }
+    .call-num { font-size: 14px; font-weight: 700; color: #ff9900; }
+    .call-why { font-size: 10px; margin-top: 3px; padding: 1px 7px; border-radius: 4px; display: inline-block; }
+    .why-dead { background: #ff000022; color: #ff6666; border: 1px solid #ff000033; }
+    .why-none { background: #ff990022; color: #ff9900; border: 1px solid #ff990033; }
+    .why-fb { background: #0066ff22; color: #4499ff; border: 1px solid #0066ff33; }
+
+    /* LOG */
+    .log { background: #141414; border: 1px solid #222; border-radius: 12px; padding: 20px; }
+    .log h3 { font-size: 11px; color: #444; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+    .log-row { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid #ffffff05; font-size: 12px; }
+    .log-row:last-child { border-bottom: none; }
+    .log-t { color: #444; min-width: 90px; }
+    .log-m { color: #888; }
+    .log-m .hi { color: #6c63ff; } .log-m .ok { color: #00ff88; } .log-m .warn { color: #ff9900; } .log-m .err { color: #ff6666; }
+
+    /* PA COMMANDS */
+    .pa-box { background: #0d1a0d; border: 1px solid #00ff8833; border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+    .pa-box h3 { font-size: 13px; font-weight: 700; color: #00ff88; margin-bottom: 14px; }
+    .pa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media(max-width: 600px) { .pa-grid { grid-template-columns: 1fr; } }
+    .pa-cmd { background: #111; border: 1px solid #00ff8822; border-radius: 8px; padding: 12px 14px; }
+    .pa-cmd .cmd { font-size: 12px; font-weight: 700; color: #00ff88; font-family: monospace; margin-bottom: 4px; }
+    .pa-cmd .desc { font-size: 11px; color: #666; line-height: 1.4; }
+
+    /* SCRIPT BOX */
+    .script-box { background: #0a0a14; border: 1px solid #6c63ff33; border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+    .script-box h3 { font-size: 13px; font-weight: 700; color: #a89cff; margin-bottom: 12px; }
+    .script-text { font-size: 13px; color: #888; line-height: 1.9; font-style: italic; border-left: 2px solid #6c63ff44; padding-left: 14px; }
+    .script-text strong { color: #6c63ff; font-style: normal; }
+
+    /* ACTION ITEMS */
+    .actions { background: #0d0d1a; border: 1px solid #6c63ff33; border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+    .actions h3 { font-size: 13px; font-weight: 700; color: #a89cff; margin-bottom: 14px; }
+    .action-row { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #ffffff06; }
+    .action-row:last-child { border-bottom: none; }
+    .action-label { font-size: 10px; min-width: 70px; padding-top: 2px; font-weight: 600; }
+    .lbl-urgent { color: #ff6666; }
+    .lbl-today { color: #ffd700; }
+    .lbl-done { color: #00ff88; }
+    .lbl-next { color: #6c63ff; }
+    .action-text { font-size: 13px; color: #ccc; line-height: 1.5; }
+    .action-text strong { color: #fff; }
+
+    .footer { text-align: center; padding: 32px 24px; font-size: 11px; color: #333; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">AJ<span>Scales</span>X</div>
+  <div class="nav-tab active" onclick="showPage('overview')">Overview</div>
+  <div class="nav-tab" onclick="showPage('meetings')">Meetings & Calls</div>
+  <div class="nav-tab" onclick="showPage('pipeline')">Pipeline</div>
+  <div class="nav-tab" onclick="showPage('clients')">Clients</div>
+  <div class="nav-tab" onclick="showPage('pa')">PA Commands</div>
+  <div class="nav-right">
+    <div class="goal-chip">Goal: <span>$1,000</span> in 7 days</div>
+    <div class="day-chip">DAY 2</div>
+  </div>
+</nav>
+
+<!-- ===================== OVERVIEW PAGE ===================== -->
+<div class="page active" id="page-overview">
+
+  <div class="stats-grid">
+    <div class="stat"><div class="n c-purple">6</div><div class="l">Emails Sent</div></div>
+    <div class="stat"><div class="n c-orange">6</div><div class="l">Call List</div></div>
+    <div class="stat"><div class="n c-teal">0</div><div class="l">Replies</div></div>
+    <div class="stat"><div class="n" style="color:#ff69b4">0</div><div class="l">Meetings Booked</div></div>
+    <div class="stat"><div class="n c-gold">0</div><div class="l">Interested</div></div>
+    <div class="stat"><div class="n c-green">0</div><div class="l">Clients Closed</div></div>
+    <div class="stat"><div class="n c-green" style="font-size:24px">$0</div><div class="l">Revenue</div></div>
+  </div>
+
+  <div class="progress-card">
+    <h3>Revenue Progress — $0 of $1,000</h3>
+    <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+    <div class="progress-meta"><span>$0</span><span>$250</span><span>$500</span><span>$750</span><span>$1,000 🎯</span></div>
+  </div>
+
+  <div class="actions">
+    <h3>📋 Today's Actions — Day 2, Tue 1 Jul</h3>
+    <div class="action-row">
+      <div class="action-label lbl-urgent">🔥 CALL NOW</div>
+      <div class="action-text"><strong>DDF Painting — 0413 731 467</strong> — Don's website domain is completely dead. He has zero online presence right now. Easiest pitch you'll make.</div>
+    </div>
+    <div class="action-row">
+      <div class="action-label lbl-urgent">🔥 CALL NOW</div>
+      <div class="action-text"><strong>Fida Painting — 0470245101</strong> — 15 years in business, Facebook only. No website at all.</div>
+    </div>
+    <div class="action-row">
+      <div class="action-label lbl-done">✅ DONE</div>
+      <div class="action-text">All 6 emails confirmed sent (verified in Gmail Sent folder). Zero drafts pending.</div>
+    </div>
+    <div class="action-row">
+      <div class="action-label lbl-today">⚠ URGENT</div>
+      <div class="action-text"><strong>Fix domain verification</strong> — Google warned about ajscalesx.com suspension risk. Open Gmail → find the Google Workspace email → click verify link. Takes 2 mins.</div>
+    </div>
+    <div class="action-row">
+      <div class="action-label lbl-today">TODAY</div>
+      <div class="action-text">Call remaining 4 on call list: D.M. & J.P. Ball (07 3206 8019), C.M. Poulter (0437 320 701), Simplicity Painting (0408 459 228), Trinity Landscape (0481 113 793)</div>
+    </div>
+    <div class="action-row">
+      <div class="action-label lbl-next">DAY 3</div>
+      <div class="action-text">Send follow-ups to Martin (Isle Plumbers) & Steven (Shelley Contracting) — they hit the 3-day mark tomorrow. New niche: cafes + restaurants.</div>
+    </div>
+  </div>
+
+  <div class="log">
+    <h3>Activity Log</h3>
+    <div class="log-row"><div class="log-t">1 Jul · Now</div><div class="log-m"><span class="ok">Dashboard updated</span> — all 6 emails confirmed sent, 0 drafts pending, 0 replies.</div></div>
+    <div class="log-row"><div class="log-t">1 Jul</div><div class="log-m"><span class="hi">3 new emails sent</span> — LMF Painters GC, TL Painting (Tim), C Price Landscapes.</div></div>
+    <div class="log-row"><div class="log-t">1 Jul</div><div class="log-m"><span class="hi">Call list built</span> — 6 phone prospects, all no/dead websites. DDF Painting top priority.</div></div>
+    <div class="log-row"><div class="log-t">30 Jun</div><div class="log-m"><span class="err">Bounce</span> — Home & Garden Landscaping email invalid, removed.</div></div>
+    <div class="log-row"><div class="log-t">30 Jun</div><div class="log-m"><span class="hi">3 emails sent</span> — Isle Plumbers & Gas, Shelley Contracting, Home & Garden (bounced).</div></div>
+    <div class="log-row"><div class="log-t">30 Jun</div><div class="log-m"><span class="hi">Campaign launched</span> — system built, templates written, outreach started.</div></div>
+  </div>
+</div>
+
+<!-- ===================== MEETINGS PAGE ===================== -->
+<div class="page" id="page-meetings">
+
+  <div class="section-header">
+    <h2>Meetings & Calls</h2>
+    <div class="sub">Tell AJ "book a call with [name] on [day] at [time]" to add one</div>
+  </div>
+
+  <!-- UPCOMING -->
+  <div style="font-size:12px; color:#555; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Upcoming</div>
+  <div class="empty-state">
+    <div class="emoji">📅</div>
+    <strong>No meetings booked yet</strong>
+    Tell AJ: "book a call with [Name] from [Business] on [day] at [time]"<br>
+    I'll add it here and send them a confirmation email automatically.
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="pa-box">
+    <h3>How to Book Meetings Through Me</h3>
+    <div class="pa-grid">
+      <div class="pa-cmd">
+        <div class="cmd">"Book a call with Don from DDF Painting on Thursday 3 Jul at 10am"</div>
+        <div class="desc">I'll add it to the calendar, draft a confirmation email to send to Don, and update the dashboard.</div>
+      </div>
+      <div class="pa-cmd">
+        <div class="cmd">"Confirm meeting with [name] — send them a confirmation email"</div>
+        <div class="desc">I'll draft a professional confirmation email with the date, time, and what to expect from the call.</div>
+      </div>
+      <div class="pa-cmd">
+        <div class="cmd">"What calls do I have this week?"</div>
+        <div class="desc">I'll list everything on your calendar with times, names, and phone numbers.</div>
+      </div>
+      <div class="pa-cmd">
+        <div class="cmd">"[Name] wants to reschedule to Friday at 2pm"</div>
+        <div class="desc">I'll update the meeting, send a rescheduled confirmation email, and note it in the log.</div>
+      </div>
+      <div class="pa-cmd">
+        <div class="cmd">"Call with [name] went well — they want to proceed"</div>
+        <div class="desc">I'll move them to Interested in the pipeline and draft a follow-up email with your pricing.</div>
+      </div>
+      <div class="pa-cmd">
+        <div class="cmd">"[Name] no-showed"</div>
+        <div class="desc">I'll mark the meeting as missed and draft a friendly follow-up email to reschedule.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CALL SCRIPT -->
+  <div class="script-box">
+    <h3>📞 Call Script — Use This Word for Word</h3>
+    <div class="script-text">
+      "Hey, is this <strong>[Name]</strong>? Great — I'm AJ from AJScalesX, I build websites for Queensland tradies.<br><br>
+      I noticed <strong>[Business Name]</strong> doesn't have a website yet — I wanted to quickly ask, are you getting enough enquiries at the moment, or would more jobs coming in from Google be helpful?<br><br>
+      <em>... let them answer ...</em><br><br>
+      I build a 5-page website for $500, done in 5 business days. Most tradies start getting Google enquiries within a few weeks. Would it be worth jumping on a quick 10-minute call so I can show you what it'd look like for your business?"<br><br>
+      <strong>If yes:</strong> "Perfect — are you free [day] around [time]? I'll send you a quick confirmation."<br>
+      <strong>If unsure:</strong> "No pressure — can I send you a free mock-up of what your website could look like? Takes me an hour and there's zero obligation."
+    </div>
+  </div>
+
+  <!-- CALL LIST -->
+  <div class="call-list">
+    <h3>📞 Call List — 6 Businesses Ready to Call</h3>
+    <div class="call-item">
+      <div class="call-left">
+        <div class="cn">DDF Painting — Don Fitzgerald</div>
+        <div class="cd">Capalaba, Brisbane · Painter · 🔥 WEBSITE DOMAIN DEAD</div>
+      </div>
+      <div class="call-right">
+        <div class="call-num">0413 731 467</div>
+        <span class="call-why why-dead">Dead website</span>
+      </div>
+    </div>
+    <div class="call-item">
+      <div class="call-left">
+        <div class="cn">Fida Painting — Fida Haidari</div>
+        <div class="cd">Edens Landing, Brisbane · Painter · Facebook only</div>
+      </div>
+      <div class="call-right">
+        <div class="call-num">0470245101</div>
+        <span class="call-why why-fb">Facebook only</span>
+      </div>
+    </div>
+    <div class="call-item">
+      <div class="call-left">
+        <div class="cn">D.M. & J.P. Ball</div>
+        <div class="cd">157 Mill St, Redland Bay · Painter · No website</div>
+      </div>
+      <div class="call-right">
+        <div class="call-num">07 3206 8019</div>
+        <span class="call-why why-none">No website</span>
+      </div>
+    </div>
+    <div class="call-item">
+      <div class="call-left">
+        <div class="cn">C.M. Poulter</div>
+        <div class="cd">Alexandra Hills, Brisbane · Painter · No website found</div>
+      </div>
+      <div class="call-right">
+        <div class="call-num">0437 320 701</div>
+        <span class="call-why why-none">No website</span>
+      </div>
+    </div>
+    <div class="call-item">
+      <div class="call-left">
+        <div class="cn">Simplicity Painting</div>
+        <div class="cd">Toowoomba · Painter · Verify website first</div>
+      </div>
+      <div class="call-right">
+        <div class="call-num">0408 459 228</div>
+        <span class="call-why why-none">Check first</span>
+      </div>
+    </div>
+    <div class="call-item">
+      <div class="call-left">
+        <div class="cn">Trinity Landscape</div>
+        <div class="cd">Cairns · Landscaper · Basic website — upgrade pitch</div>
+      </div>
+      <div class="call-right">
+        <div class="call-num">0481 113 793</div>
+        <span class="call-why why-dead">Upgrade pitch</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===================== PIPELINE PAGE ===================== -->
+<div class="page" id="page-pipeline">
+
+  <div class="section-header">
+    <h2>Outreach Pipeline</h2>
+    <div class="sub">12 total prospects · Day 2 of 7</div>
+  </div>
+
+  <div class="pipeline">
+    <div class="p-col">
+      <div class="p-col-head">Call List <span class="badge">6</span></div>
+      <div class="p-card"><div class="name">DDF Painting</div><div class="info">Don · 0413 731 467 · Capalaba</div><span class="p-tag t-painter">Painter 🔥</span></div>
+      <div class="p-card"><div class="name">Fida Painting</div><div class="info">Fida · 0470245101 · Edens Landing</div><span class="p-tag t-painter">Painter</span></div>
+      <div class="p-card"><div class="name">D.M. & J.P. Ball</div><div class="info">07 3206 8019 · Redland Bay</div><span class="p-tag t-painter">Painter</span></div>
+      <div class="p-card"><div class="name">C.M. Poulter</div><div class="info">0437 320 701 · Alexandra Hills</div><span class="p-tag t-painter">Painter</span></div>
+      <div class="p-card"><div class="name">Simplicity Painting</div><div class="info">0408 459 228 · Toowoomba</div><span class="p-tag t-painter">Painter</span></div>
+      <div class="p-card"><div class="name">Trinity Landscape</div><div class="info">0481 113 793 · Cairns</div><span class="p-tag t-landscaper">Landscaper</span></div>
+    </div>
+    <div class="p-col p-col-emailed">
+      <div class="p-col-head">Emailed <span class="badge">5</span></div>
+      <div class="p-card"><div class="name">Isle Plumbers & Gas</div><div class="info">Martin · Coochiemudlo Is.</div><span class="p-tag t-plumber">Plumber</span></div>
+      <div class="p-card"><div class="name">Shelley Contracting</div><div class="info">Steven · Coochiemudlo Is.</div><span class="p-tag t-painter">Painter</span></div>
+      <div class="p-card"><div class="name">LMF Painters GC</div><div class="info">Gold Coast</div><span class="p-tag t-painter">Painter</span></div>
+      <div class="p-card"><div class="name">TL Painting</div><div class="info">Tim · Coomera GC</div><span class="p-tag t-painter">Painter</span></div>
+      <div class="p-card"><div class="name">C Price Landscapes</div><div class="info">Brisbane</div><span class="p-tag t-landscaper">Landscaper</span></div>
+    </div>
+    <div class="p-col p-col-replied">
+      <div class="p-col-head">Replied <span class="badge">0</span></div>
+      <div style="font-size:11px;color:#333;text-align:center;padding:20px 0;">Waiting...</div>
+    </div>
+    <div class="p-col p-col-interested">
+      <div class="p-col-head">Interested <span class="badge">0</span></div>
+      <div style="font-size:11px;color:#333;text-align:center;padding:20px 0;">None yet</div>
+    </div>
+    <div class="p-col p-col-closed">
+      <div class="p-col-head">Closed Won <span class="badge">0</span></div>
+      <div style="font-size:11px;color:#333;text-align:center;padding:20px 0;">None yet</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CLIENTS PAGE ===================== -->
+<div class="page" id="page-clients">
+
+  <div class="section-header">
+    <h2>Active Clients</h2>
+    <div class="sub">Tell AJ "I closed [name] for $500" to add a client here</div>
+  </div>
+
+  <div class="empty-state">
+    <div class="emoji">🚀</div>
+    <strong>No clients yet — this is where they'll live</strong>
+    Once you close your first client I'll create a card here showing their package, deposit status, project progress, and due date.<br><br>
+    Tell me: <em>"I closed [Name] from [Business] for $500 — deposit received"</em>
+  </div>
+
+  <div class="pa-box" style="margin-top:0;">
+    <h3>How Client Cards Work</h3>
+    <div class="pa-grid">
+      <div class="pa-cmd">
+        <div class="cmd">"I closed [name] for $500 — deposit received"</div>
+        <div class="desc">I create their client card, set project status to Building, and draft a welcome email.</div>
+      </div>
+      <div class="pa-cmd">
+        <div class="cmd">"Website for [name] is ready for review"</div>
+        <div class="desc">I update their status to Review, draft an email asking for feedback, and note the balance due.</div>
+      </div>
+      <div class="pa-cmd">
+        <div class="cmd">"[name] approved the website — collecting final payment"</div>
+        <div class="desc">I update to Complete, calculate outstanding balance, and draft a final invoice email.</div>
+      </div>
+      <div class="pa-cmd">
+        <div class="cmd">"[name] paid in full"</div>
+        <div class="desc">I mark as fully paid, update revenue total, and update the progress bar toward $1,000.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PA COMMANDS PAGE ===================== -->
+<div class="page" id="page-pa">
+
+  <div class="section-header">
+    <h2>PA Command Reference</h2>
+    <div class="sub">Just say these things to AJ in chat — no forms, no fuss</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+    <div>
+      <div style="font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">📊 Checking In</div>
+      <div class="pa-cmd" style="margin-bottom:10px;border-radius:12px;">
+        <div class="cmd">"Check for replies"</div>
+        <div class="desc">I scan Gmail and report back on any prospect responses, including what to say.</div>
+      </div>
+      <div class="pa-cmd" style="margin-bottom:10px;border-radius:12px;">
+        <div class="cmd">"Update my dashboard"</div>
+        <div class="desc">I refresh all stats, pipeline, and activity log then push to the repo.</div>
+      </div>
+      <div class="pa-cmd" style="margin-bottom:10px;border-radius:12px;">
+        <div class="cmd">"How are we tracking?"</div>
+        <div class="desc">Full summary: emails sent, replies, revenue, days left, what to focus on.</div>
+      </div>
+    </div>
+
+    <div>
+      <div style="font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">📅 Meetings</div>
+      <div class="pa-cmd" style="margin-bottom:10px;border-radius:12px;">
+        <div class="cmd">"Book a call with [name] on [day] at [time]"</div>
+        <div class="desc">Adds to meetings calendar + drafts a confirmation email for them.</div>
+      </div>
+      <div class="pa-cmd" style="margin-bottom:10px;border-radius:12px;">
+        <div class="cmd">"What calls do I have this week?"</div>
+        <div class="desc">Lists all upcoming meetings with names, times, and phone numbers.</div>
+      </div>
+      <div class="pa-cmd" style="margin-bottom:10px;border-radius:12px;">
+        <div class="cmd">"[name] no-showed"</div>
+        <div class="desc">Marks missed, drafts a follow-up email to reschedule.</div>
+      </div>
+    </div>
+
+    <div>
+      <div style="font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">📬 Prospects</div>
+      <div class="pa-cmd" style="margin-bottom:10px;border-radius:12px;">
+        <div class="cmd">"Add prospect: [name, email/phone, niche, city]"</div>
+        <div class="desc">Adds to CSV and queues a personalised email draft in Gmail.</div>
+      </div>
+      <div class="pa-cmd" style="margin-bottom:10px;border-radius:12px;">
+        <div class="cmd">"Send follow-ups"</div>
+        <div class="desc">Queues follow-up emails for everyone who hasn't replied after 3 days.</div>
+      </div>
+      <div class="pa-cmd" style="margin-bottom:10px;border-radius:12px;">
+        <div class="cmd">"Write a reply to [name] — they said [what they said]"</div>
+        <div class="desc">I write the perfect reply for you to send, tailored to their response.</div>
+      </div>
+    </div>
+
+    <div>
+      <div style="font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">💰 Closing</div>
+      <div class="pa-cmd" style="margin-bottom:10px;border-radius:12px;">
+        <div class="cmd">"I closed [name] for $[amount]"</div>
+        <div class="desc">Creates client card, updates revenue + progress bar, drafts welcome email.</div>
+      </div>
+      <div class="pa-cmd" style="margin-bottom:10px;border-radius:12px;">
+        <div class="cmd">"[name] paid in full"</div>
+        <div class="desc">Marks project complete, updates revenue to show full amount.</div>
+      </div>
+      <div class="pa-cmd" style="margin-bottom:10px;border-radius:12px;">
+        <div class="cmd">"Send invoice to [name] for $[amount]"</div>
+        <div class="desc">Drafts a professional invoice email to send from Gmail.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">AJScalesX CRM · Updated 1 July 2026 · Tell AJ "update my dashboard" anytime</div>
+
+<script>
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    event.target.classList.add('active');
+  }
+</script>
+
+</body>
+</html>
