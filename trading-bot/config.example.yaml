@@ -1,0 +1,42 @@
+# Copy to config.yaml and adjust. config.yaml is the bot's single source of truth
+# for how it behaves. API keys/tokens are NOT in here -- those go in .env.
+
+mode: paper              # paper = simulated fills on live prices, no risk.
+                         # live  = real orders on real money. Only switch this
+                         #         after you've watched paper mode run and
+                         #         understand its behavior.
+
+exchange:
+  name: binance
+  testnet: true          # only used when mode is "live". Binance's spot
+                         # testnet uses fake funds against a live-like API,
+                         # a required step before real mode: false trading.
+
+symbols:                 # markets the bot watches and can trade
+  - BTC/USDT
+  - ETH/USDT
+
+timeframe: 15m           # candle size used for features/signals
+history_candles: 500     # candles of history kept in memory per symbol
+loop_interval_seconds: 60
+
+model:
+  path: models/model.joblib
+  min_confidence: 0.60   # model must be at least this sure before entering
+  horizon_candles: 4     # how many candles ahead the model predicts
+  label_return_threshold: 0.006  # move needed to count as "up" when training
+
+risk:
+  position_size_pct: 2.0     # % of account equity risked per new position
+  stop_loss_pct: 2.0         # exit if price falls this % below entry
+  take_profit_pct: 4.0       # exit if price rises this % above entry
+  max_open_positions: 3      # cap on simultaneous open positions
+  max_daily_loss_pct: 5.0    # circuit breaker: halt new entries for the day
+                             # once realized+unrealized loss hits this %
+
+paper:
+  starting_balance_usdt: 1000
+
+telegram:
+  enabled: false        # set true once TELEGRAM_BOT_TOKEN/CHAT_ID are in .env
+  poll_manual_signals: true   # allow /signal commands from your chat
