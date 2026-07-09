@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trading Bot Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0a0a0a; color: #e0e0e0; min-height: 100vh; padding: 24px;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+  h1 { font-size: 20px; font-weight: 800; color: #fff; }
+  h1 span { color: #6c63ff; }
+  .badge { font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 1px solid #333; color: #999; }
+  .badge.paper { background: #1a1a2e; border-color: #6c63ff44; color: #a89cff; }
+  .badge.live { background: #2e1a1a; border-color: #ff6c6c44; color: #ff9c9c; }
+  .badge.paused { background: #2e2a1a; border-color: #ffcc6c44; color: #ffdc9c; }
+  .badge.tripped { background: #2e1a1a; border-color: #ff6c6c44; color: #ff9c9c; }
+  .stale { font-size: 12px; color: #b45; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 28px; }
+  .tile { background: #111; border: 1px solid #222; border-radius: 10px; padding: 16px; }
+  .tile .label { font-size: 12px; color: #888; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .tile .value { font-size: 24px; font-weight: 700; color: #fff; }
+  .tile .value.pos { color: #4ade80; }
+  .tile .value.neg { color: #f87171; }
+  .tile .sub { font-size: 12px; color: #666; margin-top: 4px; }
+
+  h2 { font-size: 14px; color: #999; text-transform: uppercase; letter-spacing: 0.04em; margin: 28px 0 12px; }
+  table { width: 100%; border-collapse: collapse; background: #111; border: 1px solid #222; border-radius: 10px; overflow: hidden; }
+  th, td { text-align: left; padding: 10px 14px; font-size: 13px; border-bottom: 1px solid #1c1c1c; }
+  th { color: #888; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; }
+  tr:last-child td { border-bottom: none; }
+  td.num { font-variant-numeric: tabular-nums; }
+  .pnl-pos { color: #4ade80; }
+  .pnl-neg { color: #f87171; }
+  .reason { font-size: 11px; color: #999; background: #1a1a1a; padding: 2px 8px; border-radius: 10px; }
+  .empty { color: #666; font-size: 13px; padding: 20px; text-align: center; background: #111; border: 1px solid #222; border-radius: 10px; }
+  footer { margin-top: 32px; font-size: 12px; color: #555; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Trading<span>Bot</span></h1>
+    <div id="badges" style="display:flex; gap:8px; align-items:center;"></div>
+  </header>
+
+  <div class="tiles" id="tiles"></div>
+
+  <h2>Open Positions</h2>
+  <div id="positions"></div>
+
+  <h2>Recent Trades</h2>
+  <div id="trades"></div>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+async function load() {
+  let data;
+  try {
+    const res = await fetch('data.json?_=' + Date.now());
+    data = await res.json();
+  } catch (e) {
+    document.getElementById('tiles').innerHTML = '<div class="empty">No data yet -- the bot hasn\'t run yet.</div>';
+    return;
+  }
+  render(data);
+}
+
+function fmt(n, decimals) {
+  decimals = decimals === undefined ? 2 : decimals;
+  return Number(n).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+function render(data) {
+  const badges = document.getElementById('badges');
+  let badgeHtml = `<span class="badge ${data.mode}">${data.mode.toUpperCase()}</span>`;
+  if (data.paused) badgeHtml += `<span class="badge paused">PAUSED</span>`;
+  if (data.circuit_breaker_tripped) badgeHtml += `<span class="badge tripped">CIRCUIT BREAKER TRIPPED</span>`;
+  badges.innerHTML = badgeHtml;
+
+  const pnl = data.equity - data.starting_balance;
+  const pnlPct = data.starting_balance ? (pnl / data.starting_balance * 100) : 0;
+
+  const tiles = [
+    { label: 'Equity', value: '$' + fmt(data.equity), sub: null },
+    { label: 'Cash', value: '$' + fmt(data.cash), sub: null },
+    { label: 'Total P&L', value: (pnl >= 0 ? '+' : '') + '$' + fmt(pnl), sub: (pnlPct >= 0 ? '+' : '') + fmt(pnlPct) + '%', cls: pnl >= 0 ? 'pos' : 'neg' },
+    { label: 'Open Positions', value: data.open_positions.length, sub: null },
+    { label: 'Total Trades', value: data.total_trades, sub: null },
+  ];
+  document.getElementById('tiles').innerHTML = tiles.map(t => `
+    <div class="tile">
+      <div class="label">${t.label}</div>
+      <div class="value ${t.cls || ''}">${t.value}</div>
+      ${t.sub ? `<div class="sub">${t.sub}</div>` : ''}
+    </div>
+  `).join('');
+
+  const posEl = document.getElementById('positions');
+  if (data.open_positions.length === 0) {
+    posEl.innerHTML = '<div class="empty">No open positions.</div>';
+  } else {
+    posEl.innerHTML = `<table><thead><tr>
+      <th>Symbol</th><th>Qty</th><th>Entry</th><th>Stop-loss</th><th>Take-profit</th><th>Opened</th>
+    </tr></thead><tbody>` + data.open_positions.map(p => `
+      <tr>
+        <td>${p.symbol}</td>
+        <td class="num">${fmt(p.qty, 6)}</td>
+        <td class="num">$${fmt(p.entry_price)}</td>
+        <td class="num">$${fmt(p.stop_price)}</td>
+        <td class="num">$${fmt(p.take_profit_price)}</td>
+        <td>${new Date(p.opened_at).toLocaleString()}</td>
+      </tr>`).join('') + `</tbody></table>`;
+  }
+
+  const tradesEl = document.getElementById('trades');
+  if (data.recent_trades.length === 0) {
+    tradesEl.innerHTML = '<div class="empty">No trades yet.</div>';
+  } else {
+    tradesEl.innerHTML = `<table><thead><tr>
+      <th>Symbol</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Reason</th><th>Closed</th>
+    </tr></thead><tbody>` + data.recent_trades.map(t => `
+      <tr>
+        <td>${t.symbol}</td>
+        <td class="num">$${fmt(t.entry_price)}</td>
+        <td class="num">$${fmt(t.exit_price)}</td>
+        <td class="num ${t.pnl >= 0 ? 'pnl-pos' : 'pnl-neg'}">${t.pnl >= 0 ? '+' : ''}$${fmt(t.pnl)}</td>
+        <td><span class="reason">${t.reason}</span></td>
+        <td>${new Date(t.closed_at).toLocaleString()}</td>
+      </tr>`).join('') + `</tbody></table>`;
+  }
+
+  const generated = new Date(data.generated_at);
+  const ageMinutes = (Date.now() - generated.getTime()) / 60000;
+  const staleNote = ageMinutes > 60 ? `<div class="stale">Last updated ${Math.round(ageMinutes)} min ago -- may be stale, check the scheduled job is running.</div>` : '';
+  document.getElementById('footer').innerHTML = `Last updated: ${generated.toLocaleString()}${staleNote}<br>Symbols: ${data.symbols.join(', ')}`;
+}
+
+load();
+</script>
+</body>
+</html>

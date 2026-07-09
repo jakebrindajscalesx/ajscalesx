@@ -79,6 +79,29 @@ Runs continuously, logging to stdout and `state/trading_bot.log`, and
 persisting portfolio state to `state/portfolio.json` so it survives
 restarts. Stop with Ctrl-C — it saves state before exiting.
 
+### Or: run it for free on GitHub Actions, no server needed
+
+If you don't have anywhere to run a long-lived process, `.github/workflows/trading-bot.yml`
+runs `run_once.py` (a single decision cycle, not the infinite loop) on a
+schedule using GitHub's free compute, commits the updated state back to this
+branch each time, and publishes a dashboard to GitHub Pages.
+
+- The workflow file has to live on the repo's **default branch** for its
+  schedule to fire (a GitHub requirement) — it was added there separately;
+  it checks out and runs this branch's code rather than merging it in.
+- No account/signup beyond GitHub itself, and no credentials are required
+  for paper mode.
+- Trigger it manually anytime from the repo's Actions tab -> "Trading Bot
+  Cycle" -> "Run workflow", instead of waiting for the schedule.
+- View the dashboard at `https://<your-username>.github.io/<repo>/trading-bot/`
+  once it's run at least once.
+- Optional: add `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` as repo secrets
+  (Settings -> Secrets and variables -> Actions) and set `telegram.enabled: true`
+  in `config.yaml` to get alerts there too.
+- `run_once.py` retrains the model automatically if it's missing or more
+  than 7 days old, so this is self-maintaining — nothing to run manually
+  after initial setup.
+
 ### Telegram alerts and manual signals (optional but recommended)
 
 1. Message [@BotFather](https://t.me/BotFather) on Telegram, create a bot,

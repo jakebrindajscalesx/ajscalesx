@@ -5,6 +5,9 @@
 Reads config.yaml (mode: paper by default) and .env (API keys / Telegram,
 only needed for live mode / alerts). Stops cleanly on Ctrl-C or SIGTERM,
 saving portfolio state first.
+
+For scheduled/serverless execution (e.g. GitHub Actions) where nothing runs
+continuously, use run_once.py instead -- it does a single cycle and exits.
 """
 from __future__ import annotations
 
@@ -13,20 +16,20 @@ import sys
 import time
 
 from trading_bot.config import load_config
-from trading_bot.exchange import build_exchange, fetch_last_price
+from trading_bot.cycle import CycleState, run_one_cycle
 from trading_bot.data import CandleStore
+from trading_bot.exchange import build_exchange
 from trading_bot.executor import LiveExecutor, PaperExecutor
-from trading_bot.features import compute_features, latest_feature_row
 from trading_bot.logger import get_logger
-from trading_bot.model import load_model, predict_proba_up
+from trading_bot.model import load_model
 from trading_bot.portfolio import Portfolio
-from trading_bot.risk import DailyCircuitBreaker, can_open_position, position_size_qty, stop_loss_price, take_profit_price
-from trading_bot.signals import Signal
-from trading_bot.telegram_bot import TelegramClient, parse_command
+from trading_bot.risk import DailyCircuitBreaker
+from trading_bot.telegram_bot import TelegramClient
 
 log = get_logger("main")
 
 PORTFOLIO_STATE_PATH = "state/portfolio.json"
+CIRCUIT_BREAKER_STATE_PATH = "state/circuit_breaker.json"
 
 _shutdown = False
 
@@ -69,92 +72,15 @@ def main() -> int:
             telegram.send(msg)
 
     executor = LiveExecutor(client, portfolio, alert) if config.is_live else PaperExecutor(portfolio, alert)
-
-    circuit_breaker = DailyCircuitBreaker(config.risk.max_daily_loss_pct)
-    paused = False
+    circuit_breaker = DailyCircuitBreaker.load_or_create(CIRCUIT_BREAKER_STATE_PATH, config.risk.max_daily_loss_pct)
+    state = CycleState()
 
     alert(f"Trading bot started in {config.mode.upper()} mode. Symbols: {', '.join(config.symbols)}")
 
     while not _shutdown:
-        current_prices: dict[str, float] = {}
-        feature_rows = {}
-
-        for symbol in config.symbols:
-            try:
-                df = candle_store.refresh(symbol)
-                feature_rows[symbol] = latest_feature_row(compute_features(df))
-                current_prices[symbol] = fetch_last_price(client, symbol)
-            except Exception as exc:
-                log.error(f"Failed to fetch data for {symbol}: {exc}")
-
-        executor.check_exits(current_prices)
-
-        equity = portfolio.total_equity(current_prices)
-        breaker_tripped = circuit_breaker.update(equity)
-        if breaker_tripped:
-            log.warning(f"Daily circuit breaker tripped. Equity {equity:.2f}. Halting new entries today.")
-
-        manual_signals: list[Signal] = []
-        if telegram and config.telegram.poll_manual_signals:
-            for raw in telegram.poll_commands():
-                cmd = parse_command(raw)
-                if cmd is None:
-                    telegram.send(f"Unrecognized command: {raw}")
-                    continue
-                if cmd["type"] == "signal":
-                    if cmd["action"] == "buy":
-                        manual_signals.append(Signal(symbol=cmd["symbol"], action="buy", source="manual"))
-                    else:
-                        executor.close_position_manually(cmd["symbol"], current_prices.get(cmd["symbol"], 0))
-                elif cmd["type"] == "pause":
-                    paused = True
-                    telegram.send("Paused: no new positions will be opened until /resume.")
-                elif cmd["type"] == "resume":
-                    paused = False
-                    circuit_breaker.reset()
-                    telegram.send("Resumed: circuit breaker cleared, new positions allowed again.")
-                elif cmd["type"] == "status":
-                    telegram.send(
-                        f"Mode: {config.mode}\nEquity: {equity:.2f}\n"
-                        f"Cash: {portfolio.cash:.2f}\nOpen positions: {list(portfolio.positions.keys())}\n"
-                        f"Paused: {paused}\nCircuit breaker tripped: {circuit_breaker.tripped}"
-                    )
-
-        if not paused and not breaker_tripped:
-            for symbol in config.symbols:
-                if symbol in portfolio.positions:
-                    continue
-                if not can_open_position(len(portfolio.positions), config.risk.max_open_positions):
-                    break
-
-                manual = next((s for s in manual_signals if s.symbol == symbol), None)
-                if manual:
-                    signal_ = manual
-                else:
-                    row = feature_rows.get(symbol)
-                    if row is None:
-                        continue
-                    proba = predict_proba_up(clf, row)
-                    signal_ = Signal(symbol, "buy", "model", proba) if proba >= config.model.min_confidence else None
-
-                if signal_ is None:
-                    continue
-
-                price = current_prices.get(symbol)
-                if not price:
-                    continue
-
-                qty = position_size_qty(equity, price, config.risk.position_size_pct)
-                if qty <= 0:
-                    continue
-                stop = stop_loss_price(price, config.risk.stop_loss_pct)
-                take_profit = take_profit_price(price, config.risk.take_profit_pct)
-                try:
-                    executor.open_position(symbol, qty, price, stop, take_profit)
-                except Exception as exc:
-                    log.error(f"Failed to open position for {symbol}: {exc}")
-
+        state = run_one_cycle(config, client, candle_store, clf, portfolio, executor, circuit_breaker, telegram, state)
         portfolio.save(PORTFOLIO_STATE_PATH)
+        circuit_breaker.save(CIRCUIT_BREAKER_STATE_PATH)
 
         for _ in range(config.loop_interval_seconds):
             if _shutdown:

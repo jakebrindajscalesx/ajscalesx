@@ -66,3 +66,32 @@ def test_circuit_breaker_manual_reset():
 
     breaker.reset()
     assert breaker.tripped is False
+
+
+def test_circuit_breaker_persists_across_stateless_runs(tmp_path):
+    """Simulates a scheduled job: a fresh DailyCircuitBreaker instance each
+    run must not reset its day-start baseline, or it could never trip."""
+    path = tmp_path / "circuit_breaker.json"
+    now = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
+
+    run1 = DailyCircuitBreaker.load_or_create(path, max_daily_loss_pct=5.0)
+    run1.update(1000.0, now)  # sets day-start equity to 1000
+    run1.save(path)
+
+    # a new process, later the same day, sees a big loss
+    run2 = DailyCircuitBreaker.load_or_create(path, max_daily_loss_pct=5.0)
+    later_same_day = datetime(2026, 1, 1, 13, 0, tzinfo=timezone.utc)
+    assert run2.update(940.0, later_same_day) is True  # 6% loss from the persisted 1000 baseline
+    run2.save(path)
+
+    # a third process the next day should get a fresh baseline
+    run3 = DailyCircuitBreaker.load_or_create(path, max_daily_loss_pct=5.0)
+    next_day = datetime(2026, 1, 2, tzinfo=timezone.utc)
+    assert run3.update(940.0, next_day) is False
+    assert run3.tripped is False
+
+
+def test_circuit_breaker_load_or_create_missing_file(tmp_path):
+    path = tmp_path / "does_not_exist.json"
+    breaker = DailyCircuitBreaker.load_or_create(path, max_daily_loss_pct=5.0)
+    assert breaker.tripped is False

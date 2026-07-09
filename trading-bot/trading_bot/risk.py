@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 from datetime import date, datetime, timezone
+from pathlib import Path
 
 
 def position_size_qty(equity: float, price: float, position_size_pct: float) -> float:
@@ -64,3 +66,35 @@ class DailyCircuitBreaker:
     def reset(self) -> None:
         """Manually clear a trip (e.g. via a /resume Telegram command)."""
         self._tripped = False
+
+    def save(self, path: str | Path) -> None:
+        """Persists state to disk. Required when the process doesn't stay
+        running between checks (e.g. a scheduled job) -- without this, a
+        fresh instance each run would reset its day-start baseline to
+        whatever equity it saw that moment and could never actually trip."""
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        data = {
+            "max_daily_loss_pct": self.max_daily_loss_pct,
+            "day": self._day.isoformat() if self._day else None,
+            "day_start_equity": self._day_start_equity,
+            "tripped": self._tripped,
+        }
+        with open(path, "w") as f:
+            json.dump(data, f)
+
+    @classmethod
+    def load_or_create(cls, path: str | Path, max_daily_loss_pct: float) -> "DailyCircuitBreaker":
+        path = Path(path)
+        if not path.exists():
+            return cls(max_daily_loss_pct)
+        try:
+            data = json.loads(path.read_text())
+        except Exception:
+            return cls(max_daily_loss_pct)
+        breaker = cls(max_daily_loss_pct)
+        if data.get("day"):
+            breaker._day = date.fromisoformat(data["day"])
+        breaker._day_start_equity = data.get("day_start_equity")
+        breaker._tripped = bool(data.get("tripped", False))
+        return breaker
