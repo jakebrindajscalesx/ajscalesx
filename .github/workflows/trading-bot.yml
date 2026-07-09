@@ -1,0 +1,87 @@
+name: Trading Bot Cycle
+
+# Runs the paper-trading bot on a schedule with no server of your own --
+# fetches prices, maybe opens/closes a position, saves state, and publishes
+# a dashboard to GitHub Pages. All bot code lives on the
+# claude/trading-bot-dev-kvjqec branch; this workflow file has to live on
+# the repo's default branch for the schedule trigger to fire (a GitHub
+# requirement), but it checks out and runs the other branch's code rather
+# than merging it in.
+#
+# Manual run: Actions tab -> Trading Bot Cycle -> Run workflow.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: trading-bot-cycle
+  cancel-in-progress: false
+
+jobs:
+  run-cycle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout trading-bot branch
+        uses: actions/checkout@v4
+        with:
+          ref: claude/trading-bot-dev-kvjqec
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        working-directory: trading-bot
+        run: pip install -r requirements.txt
+
+      - name: Prepare config
+        working-directory: trading-bot
+        run: |
+          [ -f config.yaml ] || cp config.example.yaml config.yaml
+
+      - name: Run one trading cycle
+        working-directory: trading-bot
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
+          BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
+        run: python run_once.py
+
+      - name: Commit updated state back to trading-bot branch
+        working-directory: trading-bot
+        run: |
+          git config user.name "trading-bot"
+          git config user.email "trading-bot@users.noreply.github.com"
+          git add -f state models
+          if git diff --cached --quiet; then
+            echo "No state changes to commit."
+          else
+            git commit -m "Bot cycle: update state [skip ci]"
+            git push origin HEAD:claude/trading-bot-dev-kvjqec
+          fi
+
+      - name: Publish dashboard to GitHub Pages
+        run: |
+          git config user.name "trading-bot"
+          git config user.email "trading-bot@users.noreply.github.com"
+          git fetch origin gh-pages
+          git worktree add -B gh-pages-local /tmp/gh-pages origin/gh-pages
+          mkdir -p /tmp/gh-pages/trading-bot
+          cp trading-bot/docs/index.html /tmp/gh-pages/trading-bot/index.html
+          cp trading-bot/docs/data.json /tmp/gh-pages/trading-bot/data.json
+          cd /tmp/gh-pages
+          git add trading-bot
+          if git diff --cached --quiet; then
+            echo "No dashboard changes to publish."
+          else
+            git commit -m "Update trading bot dashboard [skip ci]"
+            git push origin gh-pages-local:gh-pages
+          fi
