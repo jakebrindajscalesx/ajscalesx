@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-07-09T08:08:16.803348+00:00",
+  "mode": "paper",
+  "symbols": [
+    "BTC/USDT",
+    "ETH/USDT"
+  ],
+  "equity": 1000.0,
+  "cash": 1000.0,
+  "starting_balance": 1000.0,
+  "paused": false,
+  "circuit_breaker_tripped": false,
+  "open_positions": [],
+  "recent_trades": [],
+  "total_trades": 0
+}
