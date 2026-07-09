@@ -1,6 +1,0 @@
-2026-07-09 08:08:12 INFO [run_once] Running one cycle in PAPER mode. Symbols: ['BTC/USDT', 'ETH/USDT']
-2026-07-09 08:08:12 INFO [trading_bot.exchange] Exchange client in paper mode: live market data, simulated orders.
-2026-07-09 08:08:12 INFO [run_once] No model found, training one now.
-2026-07-09 08:08:14 INFO [trading_bot.model] Model trained: {'train_accuracy': 1.0, 'test_accuracy': 0.9057971014492754, 'positive_rate': 0.07122093023255814, 'n_samples': 688}
-2026-07-09 08:08:14 INFO [run_once] Trained and saved model from BTC/USDT: {'train_accuracy': 1.0, 'test_accuracy': 0.9057971014492754, 'positive_rate': 0.07122093023255814, 'n_samples': 688}
-2026-07-09 08:08:16 INFO [run_once] Cycle complete. Equity: 1000.00, open positions: []
