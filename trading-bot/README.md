@@ -1,10 +1,10 @@
 # Trading Bot
 
-A background trading bot for Binance: fetches market data, generates buy
-signals from a trained ML model (plus optional manual signals you send via
-Telegram), sizes and opens positions with a stop-loss and take-profit on
-every trade, and a daily loss circuit breaker that halts new trades if
-losses get too big in a day.
+A background trading bot for crypto (Kraken by default, ccxt supports many
+exchanges): fetches market data, generates buy signals from a trained ML
+model (plus optional manual signals you send via Telegram), sizes and opens
+positions with a stop-loss and take-profit on every trade, and a daily loss
+circuit breaker that halts new trades if losses get too big in a day.
 
 ## Read this first
 
@@ -20,15 +20,23 @@ prices, no real orders, no real money. Run it in paper mode for a while and
 actually look at `state/portfolio.json` / the trade log before ever
 switching `mode: live` in `config.yaml`.
 
+**Why Kraken instead of Binance**: this was originally built against Binance,
+but Binance returns an HTTP 451 and refuses all requests from US-based IPs
+(including GitHub Actions' runners) as a matter of their own policy — not
+something to route around. Kraken serves US IPs and works the same way
+through ccxt, so it's the default for anything running on GitHub Actions or
+US infrastructure generally. If you're running this somewhere with a non-US
+IP and specifically want Binance, set `exchange.name: binance` in
+`config.yaml`.
+
 **The live-trading order path (`LiveExecutor` in `trading_bot/executor.py`)
-was written against the documented ccxt/Binance API but could not be
-exercised against a real exchange from the environment this was built in**
-(no outbound network access to exchange APIs there). Before trusting it with
-real funds: run it against
-[Binance Spot Testnet](https://testnet.binance.vision/) first
-(`exchange.testnet: true` in config, fake funds, real-like API), watch it
-place and manage several trades, and only then consider mainnet — starting
-with a small amount you can afford to lose entirely.
+was written against the documented ccxt/Binance order API and has NOT been
+adapted or tested for Kraken's order types** — going live needs real work
+first regardless of which exchange, but especially if you're on Kraken,
+which also has no public spot testnet/sandbox the way Binance does (so
+"dry-run against fake funds" isn't available there the same way). Come back
+and we can work through that properly when you're actually ready to go live
+— for now this is a paper-trading tool.
 
 You generally need to be 18 to open a funded exchange/brokerage account —
 paper trading and testnet don't require that, so they're the right place to

@@ -7,10 +7,17 @@ mode: paper              # paper = simulated fills on live prices, no risk.
                          #         understand its behavior.
 
 exchange:
-  name: binance
-  testnet: true          # only used when mode is "live". Binance's spot
-                         # testnet uses fake funds against a live-like API,
-                         # a required step before real mode: false trading.
+  # Kraken, not Binance: Binance blocks requests from US-based IPs (incl.
+  # GitHub Actions' US runners) with an HTTP 451. Kraken serves US IPs fine
+  # and ccxt supports it the same way. If you're running this somewhere
+  # with a non-US IP and want Binance instead, change this to "binance".
+  name: kraken
+  testnet: true          # only used when mode is "live". NOTE: unlike
+                         # Binance, Kraken has no public spot testnet/sandbox
+                         # -- this flag has no effect for Kraken. Going live
+                         # on Kraken needs its own careful validation (small
+                         # size first) since it can't be dry-run against fake
+                         # funds the way the Binance path was designed for.
 
 symbols:                 # markets the bot watches and can trade
   - BTC/USDT
