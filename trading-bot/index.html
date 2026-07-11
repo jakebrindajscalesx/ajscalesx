@@ -337,7 +337,7 @@ function render(data) {
   const generated = new Date(data.generated_at);
   const ageMinutes = (Date.now() - generated.getTime()) / 60000;
   const staleNote = ageMinutes > 60 ? `<div class="stale">Last updated ${Math.round(ageMinutes)} min ago -- may be stale, check the scheduled job is running.</div>` : '';
-  document.getElementById('footer').innerHTML = `Last updated: ${generated.toLocaleString()}${staleNote}<br>Symbols: ${data.symbols.join(', ')}`;
+  document.getElementById('footer').innerHTML = `Last updated: ${generated.toLocaleString()}${staleNote}<br>Symbols: ${data.symbols.join(', ')}<br><span style="opacity:0.6">This page checks for new data every minute -- keep it open to watch it live.</span>`;
 }
 
 function renderBacktest(backtest) {
@@ -365,7 +365,9 @@ function renderBacktest(backtest) {
   renderLineChart(document.getElementById('backtest-chart'), series, { yPrefix: '$', yDecimals: 0 });
 }
 
+const AUTO_REFRESH_MS = 60000;
 load();
+setInterval(load, AUTO_REFRESH_MS);
 </script>
 </body>
 </html>
