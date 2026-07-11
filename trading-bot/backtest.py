@@ -79,9 +79,15 @@ class BacktestResult:
             f"  Total return:  {self.total_return_pct:+.2f}%  "
             f"(${self.starting_equity:.2f} -> ${self.ending_equity:.2f})\n"
             f"  Max drawdown:  {self.max_drawdown_pct:.2f}%\n"
-            f"  Profit factor: {self.profit_factor:.2f}"
-            + ("  (no losing trades yet)" if self.gross_loss == 0 and self.num_trades else "")
+            f"  Profit factor: {self._profit_factor_str()}"
         )
+
+    def _profit_factor_str(self) -> str:
+        if self.num_trades == 0:
+            return "N/A (no trades)"
+        if self.gross_loss == 0:
+            return f"{self.profit_factor:.2f}  (no losing trades yet)"
+        return f"{self.profit_factor:.2f}"
 
 
 def backtest_symbol(config, df: pd.DataFrame, symbol: str, starting_equity: float = 1000.0) -> BacktestResult:
@@ -165,7 +171,11 @@ def main() -> int:
         if len(df) < 200:
             log.warning(f"Not enough history for {symbol} ({len(df)} candles), skipping.")
             continue
-        result = backtest_symbol(config, df, symbol)
+        try:
+            result = backtest_symbol(config, df, symbol)
+        except ValueError as exc:
+            log.error(f"Backtest failed for {symbol}: {exc}")
+            continue
         results.append(result)
         print(result.report())
 

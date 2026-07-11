@@ -39,13 +39,16 @@ jobs:
 
       - name: Run backtest
         working-directory: trading-bot
-        run: python backtest.py | tee /tmp/backtest_output.txt
+        run: |
+          set -o pipefail
+          python backtest.py | tee /tmp/backtest_output.txt
 
       - name: Post results to run summary
+        if: always()
         run: |
           {
             echo "## Backtest results"
             echo '```'
-            cat /tmp/backtest_output.txt
+            cat /tmp/backtest_output.txt || echo "(no output captured)"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"

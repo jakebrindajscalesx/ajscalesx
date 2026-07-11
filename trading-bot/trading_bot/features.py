@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 import ta
 
@@ -50,6 +51,15 @@ def compute_features(df: pd.DataFrame) -> pd.DataFrame:
 
     out["volatility"] = out["close"].pct_change().rolling(14).std()
     out["volume_change"] = out["volume"].pct_change(3)
+
+    # A handful of these are divisions that can hit zero on real exchange
+    # data (e.g. bb_pct when price is flat enough that the Bollinger Bands
+    # collapse to a single value, or volume_change when a candle reports
+    # zero volume). Treat those as missing data, same as an indicator that
+    # hasn't warmed up yet, rather than letting +/-inf reach the model --
+    # sklearn raises on infinite inputs instead of silently mishandling
+    # them, and that crash has taken down a live run before.
+    out[FEATURE_COLUMNS] = out[FEATURE_COLUMNS].replace([np.inf, -np.inf], np.nan)
 
     return out
 

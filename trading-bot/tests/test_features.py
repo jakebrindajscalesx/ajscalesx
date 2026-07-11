@@ -44,3 +44,12 @@ def test_latest_feature_row_returns_series_when_ready():
     row = latest_feature_row(out)
     assert row is not None
     assert set(FEATURE_COLUMNS).issubset(row.index)
+
+
+def test_compute_features_never_produces_inf_on_zero_volume():
+    # Regression test: a zero-volume candle divides-by-zero into +inf in
+    # volume_change (pct_change from zero).
+    df = _make_synthetic_ohlcv(n=200)
+    df.loc[df.index[60], "volume"] = 0.0
+    out = compute_features(df)
+    assert not np.isinf(out[FEATURE_COLUMNS].to_numpy(dtype=float)).any()
