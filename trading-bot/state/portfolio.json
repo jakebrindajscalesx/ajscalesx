@@ -1,5 +1,11 @@
 {
   "cash": 1000.0,
   "positions": {},
-  "trade_log": []
+  "trade_log": [],
+  "equity_history": [
+    {
+      "t": "2026-07-11T02:24:50.572422+00:00",
+      "equity": 1000.0
+    }
+  ]
 }
