@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 import ta
 
+SWING_LOOKBACK = 20  # candles used to define the "recent swing high/low"
+
 FEATURE_COLUMNS = [
     "return_1",
     "return_3",
@@ -16,6 +18,9 @@ FEATURE_COLUMNS = [
     "bb_pct",
     "volatility",
     "volume_change",
+    "swept_low",
+    "swept_high",
+    "equilibrium_position",
 ]
 
 
@@ -51,6 +56,25 @@ def compute_features(df: pd.DataFrame) -> pd.DataFrame:
 
     out["volatility"] = out["close"].pct_change().rolling(14).std()
     out["volume_change"] = out["volume"].pct_change(3)
+
+    # Liquidity sweep: price briefly trades beyond a recent swing extreme
+    # (often where stop-loss/entry orders cluster) then closes back inside
+    # it -- a wick-based "stop hunt then reverse" pattern rather than a
+    # clean breakout. swing_high/low look back over the window *before*
+    # the current candle so the current candle can be compared against it.
+    swing_high = out["high"].shift(1).rolling(SWING_LOOKBACK).max()
+    swing_low = out["low"].shift(1).rolling(SWING_LOOKBACK).min()
+    out["swept_low"] = ((out["low"] < swing_low) & (out["close"] > swing_low)).astype(float)
+    out["swept_high"] = ((out["high"] > swing_high) & (out["close"] < swing_high)).astype(float)
+
+    # Equilibrium: where the current close sits within its recent trading
+    # range, 0 = at the range low, 1 = at the range high, 0.5 = the
+    # midpoint. A common heuristic is to prefer buying in the cheaper
+    # ("discount") half of a range rather than chasing price that's already
+    # extended toward the top of it.
+    range_high = out["high"].shift(1).rolling(SWING_LOOKBACK).max()
+    range_low = out["low"].shift(1).rolling(SWING_LOOKBACK).min()
+    out["equilibrium_position"] = (out["close"] - range_low) / (range_high - range_low)
 
     # A handful of these are divisions that can hit zero on real exchange
     # data (e.g. bb_pct when price is flat enough that the Bollinger Bands

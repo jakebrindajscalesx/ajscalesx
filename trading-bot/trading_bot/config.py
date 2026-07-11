@@ -27,6 +27,8 @@ class ModelConfig:
     label_return_threshold: float
     require_trend_confirmation: bool = True
     require_volume_confirmation: bool = True
+    require_liquidity_sweep: bool = False
+    require_equilibrium_discount: bool = False
 
 
 @dataclass
@@ -103,6 +105,8 @@ def load_config(config_path: str | Path | None = None) -> Config:
         label_return_threshold=float(model_raw.get("label_return_threshold", 0.006)),
         require_trend_confirmation=bool(model_raw.get("require_trend_confirmation", True)),
         require_volume_confirmation=bool(model_raw.get("require_volume_confirmation", True)),
+        require_liquidity_sweep=bool(model_raw.get("require_liquidity_sweep", False)),
+        require_equilibrium_discount=bool(model_raw.get("require_equilibrium_discount", False)),
     )
 
     risk_raw = raw["risk"]

@@ -125,6 +125,8 @@ def run_one_cycle(
                     row,
                     require_trend=config.model.require_trend_confirmation,
                     require_volume=config.model.require_volume_confirmation,
+                    require_liquidity_sweep=config.model.require_liquidity_sweep,
+                    require_equilibrium=config.model.require_equilibrium_discount,
                 )
                 signal_ = Signal(symbol, "buy", "model", proba) if confident_enough and confirmed else None
 

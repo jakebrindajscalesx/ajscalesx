@@ -22,6 +22,7 @@ from trading_bot.dashboard import write_dashboard_data
 from trading_bot.data import CandleStore
 from trading_bot.exchange import build_exchange
 from trading_bot.executor import LiveExecutor, PaperExecutor
+from trading_bot.features import FEATURE_COLUMNS
 from trading_bot.logger import get_logger
 from trading_bot.model import load_model, save_model, train_model
 from trading_bot.portfolio import Portfolio
@@ -46,6 +47,14 @@ def ensure_model_fresh(config, client) -> None:
         needs_training = age_days > MODEL_MAX_AGE_DAYS
         if needs_training:
             log.info(f"Model is {age_days:.1f} days old (max {MODEL_MAX_AGE_DAYS}), retraining.")
+        else:
+            # A model trained before FEATURE_COLUMNS changed has a different
+            # input shape and would crash predict_proba_up rather than just
+            # being stale -- this has actually happened during development.
+            existing = load_model(model_path)
+            if getattr(existing, "n_features_in_", None) != len(FEATURE_COLUMNS):
+                log.info("Model was trained on a different feature set, retraining.")
+                needs_training = True
     else:
         log.info("No model found, training one now.")
 

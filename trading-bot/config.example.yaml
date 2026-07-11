@@ -37,6 +37,16 @@ model:
                                      # trend, not against it)
   require_volume_confirmation: true  # only buy when volume is rising
                                      # (confirms conviction behind the move)
+  require_liquidity_sweep: false     # only buy right after price wicks below
+                                     # a recent swing low and closes back
+                                     # above it ("sweep and reverse"). Off by
+                                     # default -- stacks with the other
+                                     # filters to make signals rare. Compare
+                                     # on/off with backtest.py before using.
+  require_equilibrium_discount: false # only buy when price is in the
+                                     # cheaper half of its recent trading
+                                     # range, not already extended toward
+                                     # the top. Off by default, same reason.
 
 risk:
   position_size_pct: 2.0     # % of account equity risked per new position

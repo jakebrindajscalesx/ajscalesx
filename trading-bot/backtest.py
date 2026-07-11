@@ -143,6 +143,8 @@ def backtest_symbol(config, df: pd.DataFrame, symbol: str, starting_equity: floa
                 row,
                 require_trend=config.model.require_trend_confirmation,
                 require_volume=config.model.require_volume_confirmation,
+                require_liquidity_sweep=config.model.require_liquidity_sweep,
+                require_equilibrium=config.model.require_equilibrium_discount,
             )
             if confident and confirmed:
                 qty = position_size_qty(cash, price, config.risk.position_size_pct)

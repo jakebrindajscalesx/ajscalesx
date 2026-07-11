@@ -96,11 +96,32 @@ reason for more confidence, not a guarantee of future results. Also
 available as a one-click GitHub Actions run (see below) if you don't want
 to install anything locally.
 
-Two filters run on top of the model's confidence score by default
-(`model.require_trend_confirmation` / `require_volume_confirmation` in
-`config.yaml`): only buy when price is above its own longer-term trend, and
-only when volume is rising to confirm conviction behind the move. Standard,
-checkable day-trading risk principles — turn them off in config to compare.
+Four filters can run on top of the model's confidence score, each a
+config-toggleable hard gate in `config.yaml` under `model:`:
+
+- `require_trend_confirmation` / `require_volume_confirmation` — **on by
+  default.** Only buy when price is above its own longer-term trend, and
+  only when volume is rising to confirm conviction behind the move.
+- `require_liquidity_sweep` / `require_equilibrium_discount` — **off by
+  default.** Only buy right after price wicks below a recent swing low and
+  closes back above it (a "sweep and reverse" pattern), and/or only when
+  price is in the cheaper half of its recent range rather than already
+  extended. These are specific, checkable price patterns — not claims about
+  anyone's intent — pulled from retail day-trading material and included
+  because they're well-defined enough to test, not because of who taught
+  them. They're off by default because stacked with the other two filters
+  they can make signals very rare, especially with Kraken's limited history
+  (see below). Turn them on and compare against off using `backtest.py`
+  before trusting either setting.
+
+Deliberately **not** implemented from that material: cross-index/cross-asset
+divergence timing (would need restructuring signal generation to compare
+symbols against each other mid-cycle — a reasonable future addition, not
+done here), fixed-session trading windows (the source material is for
+NYSE-hours index trading; crypto trades 24/7 and the transplant seemed weak
+enough not to be worth a config option), and anything from that material
+that was really a course/prop-firm-affiliate sales pitch rather than a
+trading rule.
 
 ### Run in paper mode (default, recommended starting point)
 
