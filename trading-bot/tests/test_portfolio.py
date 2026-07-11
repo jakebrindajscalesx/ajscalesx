@@ -60,3 +60,35 @@ def test_load_or_create_uses_starting_balance_when_missing(tmp_path):
     p = Portfolio.load_or_create(path, starting_balance=500.0)
     assert p.cash == 500.0
     assert p.positions == {}
+
+
+def test_record_equity_appends_snapshot():
+    p = Portfolio(cash=1000.0)
+    p.record_equity(1000.0, at="2026-01-01T00:00:00+00:00")
+    p.record_equity(1010.0, at="2026-01-01T00:15:00+00:00")
+    assert len(p.equity_history) == 2
+    assert p.equity_history[0] == {"t": "2026-01-01T00:00:00+00:00", "equity": 1000.0}
+    assert p.equity_history[1]["equity"] == 1010.0
+
+
+def test_record_equity_caps_history_length():
+    p = Portfolio(cash=1000.0)
+    from trading_bot.portfolio import MAX_EQUITY_HISTORY_POINTS
+
+    for i in range(MAX_EQUITY_HISTORY_POINTS + 50):
+        p.record_equity(1000.0 + i, at=f"t{i}")
+
+    assert len(p.equity_history) == MAX_EQUITY_HISTORY_POINTS
+    # oldest points got dropped, newest retained
+    assert p.equity_history[-1]["t"] == f"t{MAX_EQUITY_HISTORY_POINTS + 49}"
+
+
+def test_equity_history_persists_through_save_and_load(tmp_path):
+    p = Portfolio(cash=1000.0)
+    p.record_equity(1000.0, at="2026-01-01T00:00:00+00:00")
+    p.record_equity(1005.0, at="2026-01-01T00:15:00+00:00")
+    path = tmp_path / "portfolio.json"
+    p.save(path)
+
+    loaded = Portfolio.load_or_create(path, starting_balance=1.0)
+    assert loaded.equity_history == p.equity_history

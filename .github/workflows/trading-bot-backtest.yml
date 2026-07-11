@@ -12,7 +12,7 @@ on:
   workflow_dispatch: {}
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   backtest:
@@ -52,3 +52,21 @@ jobs:
             cat /tmp/backtest_output.txt || echo "(no output captured)"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish backtest chart data to GitHub Pages
+        if: success()
+        run: |
+          git config user.name "trading-bot"
+          git config user.email "trading-bot@users.noreply.github.com"
+          git fetch origin gh-pages
+          git worktree add -B gh-pages-local /tmp/gh-pages origin/gh-pages
+          mkdir -p /tmp/gh-pages/trading-bot
+          cp trading-bot/docs/backtest_data.json /tmp/gh-pages/trading-bot/backtest_data.json
+          cd /tmp/gh-pages
+          git add trading-bot/backtest_data.json
+          if git diff --cached --quiet; then
+            echo "No backtest chart data changes to publish."
+          else
+            git commit -m "Update trading bot backtest chart data [skip ci]"
+            git push origin gh-pages-local:gh-pages
+          fi

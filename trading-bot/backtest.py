@@ -24,8 +24,10 @@ Caveats that keep this honest, not just optimistic:
 """
 from __future__ import annotations
 
+import json
 import sys
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import pandas as pd
 
@@ -42,6 +44,7 @@ log = get_logger("backtest")
 
 BACKTEST_CANDLES = 3000
 TRAIN_FRACTION = 0.8
+BACKTEST_DATA_PATH = "docs/backtest_data.json"
 
 
 @dataclass
@@ -57,6 +60,7 @@ class BacktestResult:
     peak_equity: float = 1000.0
     max_drawdown_pct: float = 0.0
     trades: list = field(default_factory=list)
+    equity_curve: list = field(default_factory=list)  # [{"t": iso timestamp, "equity": float}]
 
     @property
     def win_rate(self) -> float:
@@ -105,8 +109,9 @@ def backtest_symbol(config, df: pd.DataFrame, symbol: str, starting_equity: floa
     cash = starting_equity
     position = None  # dict: qty, entry_price, stop_price, take_profit_price
 
-    for _, row in test_feat.iterrows():
+    for ts, row in test_feat.iterrows():
         price, high, low = row["close"], row["high"], row["low"]
+        ts_str = ts.isoformat()
 
         if position is not None:
             hit_stop = low <= position["stop_price"]
@@ -128,10 +133,19 @@ def backtest_symbol(config, df: pd.DataFrame, symbol: str, starting_equity: floa
                 else:
                     result.losses += 1
                     result.gross_loss += -pnl
-                result.trades.append({"entry": position["entry_price"], "exit": exit_price, "pnl": pnl})
+                result.trades.append(
+                    {
+                        "entry": position["entry_price"],
+                        "exit": exit_price,
+                        "pnl": pnl,
+                        "entry_at": position["entry_at"],
+                        "exit_at": ts_str,
+                    }
+                )
                 position = None
 
         equity = cash + (position["qty"] * price if position else 0)
+        result.equity_curve.append({"t": ts_str, "equity": round(equity, 4)})
         result.peak_equity = max(result.peak_equity, equity)
         drawdown = (result.peak_equity - equity) / result.peak_equity * 100 if result.peak_equity > 0 else 0
         result.max_drawdown_pct = max(result.max_drawdown_pct, drawdown)
@@ -155,11 +169,47 @@ def backtest_symbol(config, df: pd.DataFrame, symbol: str, starting_equity: floa
                         "entry_price": price,
                         "stop_price": stop_loss_price(price, config.risk.stop_loss_pct),
                         "take_profit_price": take_profit_price(price, config.risk.take_profit_pct),
+                        "entry_at": ts_str,
                     }
 
     final_price = test_feat["close"].iloc[-1] if len(test_feat) else starting_equity
     result.ending_equity = cash + (position["qty"] * final_price if position else 0)
     return result
+
+
+MAX_EXPORTED_EQUITY_POINTS = 1000
+
+
+def _downsample(points: list, max_points: int) -> list:
+    if len(points) <= max_points:
+        return points
+    step = len(points) / max_points
+    return [points[int(i * step)] for i in range(max_points)]
+
+
+def write_backtest_data(results: list[BacktestResult], path: str | Path) -> None:
+    """Exports per-symbol equity curves and trade markers so the dashboard
+    can chart them, not just print a text report."""
+    data = {
+        "generated_at": pd.Timestamp.utcnow().isoformat(),
+        "results": [
+            {
+                "symbol": r.symbol,
+                "num_trades": r.num_trades,
+                "win_rate": r.win_rate,
+                "total_return_pct": r.total_return_pct,
+                "max_drawdown_pct": r.max_drawdown_pct,
+                "profit_factor": r.profit_factor if r.gross_loss > 0 else None,
+                "equity_curve": _downsample(r.equity_curve, MAX_EXPORTED_EQUITY_POINTS),
+                "trades": r.trades,
+            }
+            for r in results
+        ],
+    }
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
 
 
 def main() -> int:
@@ -180,6 +230,8 @@ def main() -> int:
             continue
         results.append(result)
         print(result.report())
+
+    write_backtest_data(results, BACKTEST_DATA_PATH)
 
     if results:
         combined_return = sum(r.total_return_pct for r in results) / len(results)

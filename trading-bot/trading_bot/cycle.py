@@ -66,6 +66,7 @@ def run_one_cycle(
     executor.check_exits(current_prices)
 
     equity = portfolio.total_equity(current_prices)
+    portfolio.record_equity(equity)
     breaker_tripped = circuit_breaker.update(equity)
     if breaker_tripped:
         log.warning(f"Daily circuit breaker tripped. Equity {equity:.2f}. Halting new entries today.")

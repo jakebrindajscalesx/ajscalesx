@@ -148,7 +148,10 @@ branch each time, and publishes a dashboard to GitHub Pages.
 - Trigger it manually anytime from the repo's Actions tab -> "Trading Bot
   Cycle" -> "Run workflow", instead of waiting for the schedule.
 - View the dashboard at `https://<your-username>.github.io/<repo>/trading-bot/`
-  once it's run at least once.
+  once it's run at least once. It has real charts, not just numbers: an
+  equity-over-time line chart (hover for the exact value at any point) and a
+  green/red bar chart of recent trade P&L, both built from the equity history
+  the bot records on every cycle.
 - Optional: add `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` as repo secrets
   (Settings -> Secrets and variables -> Actions) and set `telegram.enabled: true`
   in `config.yaml` to get alerts there too.
@@ -157,8 +160,10 @@ branch each time, and publishes a dashboard to GitHub Pages.
   after initial setup.
 - `.github/workflows/trading-bot-backtest.yml` runs `backtest.py` the same
   way, on demand only (Actions tab -> "Trading Bot Backtest" -> "Run
-  workflow") — results appear on that run's summary page, no local install
-  needed.
+  workflow") — results appear on that run's summary page, and also publish a
+  "Backtest" section on the dashboard with a per-symbol equity curve chart so
+  you can see what the current strategy would have done on historical data,
+  not just the live numbers.
 
 ### Telegram alerts and manual signals (optional but recommended)
 

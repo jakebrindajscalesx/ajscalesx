@@ -17,11 +17,15 @@ class Position:
     live_order_id: str | None = None
 
 
+MAX_EQUITY_HISTORY_POINTS = 2000
+
+
 @dataclass
 class Portfolio:
     cash: float
     positions: dict[str, Position] = field(default_factory=dict)
     trade_log: list[dict] = field(default_factory=list)
+    equity_history: list[dict] = field(default_factory=list)
 
     def total_equity(self, current_prices: dict[str, float]) -> float:
         equity = self.cash
@@ -29,6 +33,17 @@ class Portfolio:
             price = current_prices.get(symbol, pos.entry_price)
             equity += pos.qty * price
         return equity
+
+    def record_equity(self, equity: float, at: str | None = None) -> None:
+        """Appends a timestamped equity snapshot, called once per cycle, so
+        the dashboard can plot an actual curve instead of just the current
+        number. Capped so state doesn't grow unbounded over months of
+        scheduled runs -- once full, drops the oldest point per new one."""
+        self.equity_history.append(
+            {"t": at or datetime.now(timezone.utc).isoformat(), "equity": round(equity, 4)}
+        )
+        if len(self.equity_history) > MAX_EQUITY_HISTORY_POINTS:
+            self.equity_history = self.equity_history[-MAX_EQUITY_HISTORY_POINTS:]
 
     def open_position(
         self,
@@ -80,12 +95,18 @@ class Portfolio:
             "cash": self.cash,
             "positions": {k: asdict(v) for k, v in self.positions.items()},
             "trade_log": self.trade_log,
+            "equity_history": self.equity_history,
         }
 
     @classmethod
     def from_dict(cls, data: dict) -> "Portfolio":
         positions = {k: Position(**v) for k, v in data.get("positions", {}).items()}
-        return cls(cash=data["cash"], positions=positions, trade_log=data.get("trade_log", []))
+        return cls(
+            cash=data["cash"],
+            positions=positions,
+            trade_log=data.get("trade_log", []),
+            equity_history=data.get("equity_history", []),
+        )
 
     def save(self, path: str | Path) -> None:
         path = Path(path)

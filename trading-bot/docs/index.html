@@ -5,15 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trading Bot Dashboard</title>
 <style>
+  :root {
+    --surface: #111111; --page: #0a0a0a; --border: #222222;
+    --text-primary: #ffffff; --text-secondary: #e0e0e0; --text-muted: #898781;
+    --grid: #22221f; --baseline: #333330;
+    --series-1: #6c63ff; --series-2: #d95926;
+    --good: #4ade80; --critical: #f87171;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #0a0a0a; color: #e0e0e0; min-height: 100vh; padding: 24px;
+    background: var(--page); color: var(--text-secondary); min-height: 100vh; padding: 24px;
   }
-  .wrap { max-width: 960px; margin: 0 auto; }
+  .wrap { max-width: 980px; margin: 0 auto; }
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-  h1 { font-size: 20px; font-weight: 800; color: #fff; }
-  h1 span { color: #6c63ff; }
+  h1 { font-size: 20px; font-weight: 800; color: var(--text-primary); }
+  h1 span { color: var(--series-1); }
   .badge { font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 1px solid #333; color: #999; }
   .badge.paper { background: #1a1a2e; border-color: #6c63ff44; color: #a89cff; }
   .badge.live { background: #2e1a1a; border-color: #ff6c6c44; color: #ff9c9c; }
@@ -22,24 +29,38 @@
   .stale { font-size: 12px; color: #b45; }
 
   .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 28px; }
-  .tile { background: #111; border: 1px solid #222; border-radius: 10px; padding: 16px; }
+  .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
   .tile .label { font-size: 12px; color: #888; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
-  .tile .value { font-size: 24px; font-weight: 700; color: #fff; }
-  .tile .value.pos { color: #4ade80; }
-  .tile .value.neg { color: #f87171; }
+  .tile .value { font-size: 24px; font-weight: 700; color: var(--text-primary); }
+  .tile .value.pos { color: var(--good); }
+  .tile .value.neg { color: var(--critical); }
   .tile .sub { font-size: 12px; color: #666; margin-top: 4px; }
 
   h2 { font-size: 14px; color: #999; text-transform: uppercase; letter-spacing: 0.04em; margin: 28px 0 12px; }
-  table { width: 100%; border-collapse: collapse; background: #111; border: 1px solid #222; border-radius: 10px; overflow: hidden; }
+  h2 .note { text-transform: none; font-size: 11px; color: #555; letter-spacing: normal; font-weight: 400; }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
   th, td { text-align: left; padding: 10px 14px; font-size: 13px; border-bottom: 1px solid #1c1c1c; }
   th { color: #888; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; }
   tr:last-child td { border-bottom: none; }
   td.num { font-variant-numeric: tabular-nums; }
-  .pnl-pos { color: #4ade80; }
-  .pnl-neg { color: #f87171; }
+  .pnl-pos { color: var(--good); }
+  .pnl-neg { color: var(--critical); }
   .reason { font-size: 11px; color: #999; background: #1a1a1a; padding: 2px 8px; border-radius: 10px; }
-  .empty { color: #666; font-size: 13px; padding: 20px; text-align: center; background: #111; border: 1px solid #222; border-radius: 10px; }
+  .empty { color: #666; font-size: 13px; padding: 20px; text-align: center; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
   footer { margin-top: 32px; font-size: 12px; color: #555; text-align: center; }
+
+  /* charts */
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; position: relative; }
+  .chart-card + .chart-card { margin-top: 12px; }
+  .chart-legend { display: flex; gap: 16px; margin-bottom: 8px; font-size: 12px; color: var(--text-secondary); }
+  .chart-legend .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+  .chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .chart-tooltip {
+    position: absolute; pointer-events: none; background: #1a1a1a; border: 1px solid #333;
+    border-radius: 6px; padding: 6px 10px; font-size: 12px; color: var(--text-primary);
+    transform: translate(-50%, -110%); white-space: nowrap; opacity: 0; transition: opacity 0.1s;
+  }
+  .backtest-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 12px; }
 </style>
 </head>
 <body>
@@ -51,31 +72,195 @@
 
   <div class="tiles" id="tiles"></div>
 
+  <h2>Equity Over Time</h2>
+  <div id="equity-chart"></div>
+
+  <h2>Recent Trade P&amp;L</h2>
+  <div id="pnl-chart"></div>
+
   <h2>Open Positions</h2>
   <div id="positions"></div>
 
   <h2>Recent Trades</h2>
   <div id="trades"></div>
 
+  <div id="backtest-section" style="display:none;">
+    <h2>Backtest <span class="note">-- simulated on historical data, not live results</span></h2>
+    <div id="backtest-summary"></div>
+    <div id="backtest-chart"></div>
+  </div>
+
   <footer id="footer"></footer>
 </div>
 
 <script>
+async function fetchJson(path) {
+  const res = await fetch(path + '?_=' + Date.now());
+  if (!res.ok) throw new Error('not found');
+  return res.json();
+}
+
 async function load() {
-  let data;
   try {
-    const res = await fetch('data.json?_=' + Date.now());
-    data = await res.json();
+    const data = await fetchJson('data.json');
+    render(data);
   } catch (e) {
     document.getElementById('tiles').innerHTML = '<div class="empty">No data yet -- the bot hasn\'t run yet.</div>';
-    return;
   }
-  render(data);
+
+  try {
+    const backtest = await fetchJson('backtest_data.json');
+    renderBacktest(backtest);
+  } catch (e) {
+    // no backtest run yet -- fine, section stays hidden
+  }
 }
 
 function fmt(n, decimals) {
   decimals = decimals === undefined ? 2 : decimals;
   return Number(n).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+/* ---------- minimal SVG line chart, no external deps ---------- */
+/* series: [{ name, color, points: [{t: isoString, y: number}] }] */
+function renderLineChart(container, series, opts) {
+  opts = opts || {};
+  const width = 900, height = opts.height || 220;
+  const padL = 54, padR = 12, padT = 12, padB = 28;
+  const innerW = width - padL - padR, innerH = height - padT - padB;
+
+  const allPoints = series.flatMap(s => s.points);
+  if (allPoints.length < 2) {
+    container.innerHTML = '<div class="empty">Not enough data yet for a chart -- check back after a few more cycles.</div>';
+    return;
+  }
+
+  const xs = allPoints.map(p => new Date(p.t).getTime());
+  const ys = allPoints.map(p => p.y);
+  let yMin = Math.min(...ys), yMax = Math.max(...ys);
+  if (yMin === yMax) { yMin -= 1; yMax += 1; }
+  const yPad = (yMax - yMin) * 0.08;
+  yMin -= yPad; yMax += yPad;
+  const xMin = Math.min(...xs), xMax = Math.max(...xs);
+
+  const xScale = t => padL + (xMax === xMin ? 0 : (t - xMin) / (xMax - xMin)) * innerW;
+  const yScale = y => padT + innerH - ((y - yMin) / (yMax - yMin)) * innerH;
+
+  const gridLines = 4;
+  let gridSvg = '';
+  for (let i = 0; i <= gridLines; i++) {
+    const y = padT + (innerH / gridLines) * i;
+    const val = yMax - ((yMax - yMin) / gridLines) * i;
+    gridSvg += `<line x1="${padL}" y1="${y}" x2="${width - padR}" y2="${y}" stroke="var(--grid)" stroke-width="1"/>`;
+    gridSvg += `<text x="${padL - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="var(--text-muted)">${opts.yPrefix || ''}${fmt(val, opts.yDecimals ?? 0)}</text>`;
+  }
+
+  const xTicks = 4;
+  for (let i = 0; i <= xTicks; i++) {
+    const t = xMin + ((xMax - xMin) / xTicks) * i;
+    const x = xScale(t);
+    const label = new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    gridSvg += `<text x="${x}" y="${height - 6}" text-anchor="middle" font-size="11" fill="var(--text-muted)">${label}</text>`;
+  }
+
+  let linesSvg = '';
+  let legendHtml = '';
+  series.forEach(s => {
+    const d = s.points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${xScale(new Date(p.t).getTime())} ${yScale(p.y)}`).join(' ');
+    linesSvg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+    if (series.length > 1) {
+      legendHtml += `<span><span class="swatch" style="background:${s.color}"></span>${s.name}</span>`;
+    }
+  });
+
+  const cardId = 'chart-' + Math.random().toString(36).slice(2);
+  container.innerHTML = `
+    <div class="chart-card">
+      ${legendHtml ? `<div class="chart-legend">${legendHtml}</div>` : ''}
+      <svg class="chart-svg" id="${cardId}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+        ${gridSvg}
+        ${linesSvg}
+        <line class="crosshair" x1="0" y1="${padT}" x2="0" y2="${padT + innerH}" stroke="var(--baseline)" stroke-width="1" opacity="0"/>
+        <rect x="${padL}" y="${padT}" width="${innerW}" height="${innerH}" fill="transparent" style="cursor:crosshair" id="${cardId}-overlay"/>
+      </svg>
+      <div class="chart-tooltip" id="${cardId}-tooltip"></div>
+    </div>`;
+
+  const svg = document.getElementById(cardId);
+  const overlay = document.getElementById(cardId + '-overlay');
+  const tooltip = document.getElementById(cardId + '-tooltip');
+  const crosshair = svg.querySelector('.crosshair');
+
+  overlay.addEventListener('mousemove', (evt) => {
+    const rect = svg.getBoundingClientRect();
+    const scaleX = width / rect.width;
+    const mouseX = (evt.clientX - rect.left) * scaleX;
+    const t = xMin + ((mouseX - padL) / innerW) * (xMax - xMin);
+
+    let nearest = null, nearestDist = Infinity;
+    series.forEach(s => {
+      s.points.forEach(p => {
+        const dist = Math.abs(new Date(p.t).getTime() - t);
+        if (dist < nearestDist) { nearestDist = dist; nearest = { s, p }; }
+      });
+    });
+    if (!nearest) return;
+
+    const x = xScale(new Date(nearest.p.t).getTime());
+    crosshair.setAttribute('x1', x); crosshair.setAttribute('x2', x); crosshair.setAttribute('opacity', 1);
+
+    const label = new Date(nearest.p.t).toLocaleString();
+    const valueLine = series.length > 1
+      ? series.map(s => {
+          const pt = s.points.reduce((best, p) => Math.abs(new Date(p.t) - new Date(nearest.p.t)) < Math.abs(new Date(best.t) - new Date(nearest.p.t)) ? p : best, s.points[0]);
+          return `${s.name}: ${opts.yPrefix || ''}${fmt(pt.y, opts.yDecimals ?? 2)}`;
+        }).join(' &middot; ')
+      : `${opts.yPrefix || ''}${fmt(nearest.p.y, opts.yDecimals ?? 2)}`;
+    tooltip.innerHTML = `${label}<br>${valueLine}`;
+    tooltip.style.left = (evt.clientX - rect.left) + 'px';
+    tooltip.style.top = (evt.clientY - rect.top) + 'px';
+    tooltip.style.opacity = 1;
+  });
+  overlay.addEventListener('mouseleave', () => {
+    tooltip.style.opacity = 0;
+    crosshair.setAttribute('opacity', 0);
+  });
+}
+
+/* ---------- minimal bar chart for trade P&L ---------- */
+function renderPnlBarChart(container, trades) {
+  if (trades.length === 0) {
+    container.innerHTML = '<div class="empty">No trades yet.</div>';
+    return;
+  }
+  const ordered = trades.slice().reverse(); // oldest first, left to right
+  const width = 900, height = 160;
+  const padL = 54, padR = 12, padT = 12, padB = 24;
+  const innerW = width - padL - padR, innerH = height - padT - padB;
+
+  const maxAbs = Math.max(...ordered.map(t => Math.abs(t.pnl)), 0.01);
+  const zeroY = padT + innerH / 2;
+  const barW = Math.max(2, innerW / ordered.length - 3);
+
+  let bars = '';
+  ordered.forEach((t, i) => {
+    const x = padL + (innerW / ordered.length) * i + 1.5;
+    const h = (Math.abs(t.pnl) / maxAbs) * (innerH / 2 - 4);
+    const y = t.pnl >= 0 ? zeroY - h : zeroY;
+    const color = t.pnl >= 0 ? 'var(--good)' : 'var(--critical)';
+    bars += `<rect x="${x}" y="${y}" width="${barW}" height="${Math.max(h, 1)}" rx="1.5" fill="${color}">
+      <title>${t.symbol} ${t.pnl >= 0 ? '+' : ''}$${fmt(t.pnl)} (${t.reason})</title>
+    </rect>`;
+  });
+
+  container.innerHTML = `
+    <div class="chart-card">
+      <svg class="chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+        <line x1="${padL}" y1="${zeroY}" x2="${width - padR}" y2="${zeroY}" stroke="var(--baseline)" stroke-width="1"/>
+        <text x="${padL - 8}" y="${zeroY + 4}" text-anchor="end" font-size="11" fill="var(--text-muted)">$0</text>
+        ${bars}
+      </svg>
+    </div>`;
 }
 
 function render(data) {
@@ -102,6 +287,18 @@ function render(data) {
       ${t.sub ? `<div class="sub">${t.sub}</div>` : ''}
     </div>
   `).join('');
+
+  const equityChartEl = document.getElementById('equity-chart');
+  const history = data.equity_history || [];
+  if (history.length < 2) {
+    equityChartEl.innerHTML = '<div class="empty">Not enough history yet -- the equity curve fills in as the bot runs more cycles.</div>';
+  } else {
+    renderLineChart(equityChartEl, [
+      { name: 'Equity', color: 'var(--series-1)', points: history.map(h => ({ t: h.t, y: h.equity })) }
+    ], { yPrefix: '$', yDecimals: 0 });
+  }
+
+  renderPnlBarChart(document.getElementById('pnl-chart'), data.recent_trades);
 
   const posEl = document.getElementById('positions');
   if (data.open_positions.length === 0) {
@@ -141,6 +338,31 @@ function render(data) {
   const ageMinutes = (Date.now() - generated.getTime()) / 60000;
   const staleNote = ageMinutes > 60 ? `<div class="stale">Last updated ${Math.round(ageMinutes)} min ago -- may be stale, check the scheduled job is running.</div>` : '';
   document.getElementById('footer').innerHTML = `Last updated: ${generated.toLocaleString()}${staleNote}<br>Symbols: ${data.symbols.join(', ')}`;
+}
+
+function renderBacktest(backtest) {
+  const results = backtest.results || [];
+  if (results.length === 0) return;
+
+  document.getElementById('backtest-section').style.display = 'block';
+
+  const colors = ['var(--series-1)', 'var(--series-2)'];
+  document.getElementById('backtest-summary').innerHTML = `<div class="backtest-grid">` +
+    results.map((r, i) => `
+      <div class="tile">
+        <div class="label"><span class="swatch" style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${colors[i % colors.length]};margin-right:6px;"></span>${r.symbol}</div>
+        <div class="value ${r.total_return_pct >= 0 ? 'pos' : 'neg'}">${r.total_return_pct >= 0 ? '+' : ''}${fmt(r.total_return_pct)}%</div>
+        <div class="sub">${r.num_trades} trades &middot; ${fmt(r.win_rate * 100, 0)}% win rate &middot; max DD ${fmt(r.max_drawdown_pct)}%</div>
+      </div>
+    `).join('') + `</div>`;
+
+  const series = results.map((r, i) => ({
+    name: r.symbol,
+    color: colors[i % colors.length],
+    points: r.equity_curve.map(p => ({ t: p.t, y: p.equity })),
+  })).filter(s => s.points.length > 1);
+
+  renderLineChart(document.getElementById('backtest-chart'), series, { yPrefix: '$', yDecimals: 0 });
 }
 
 load();

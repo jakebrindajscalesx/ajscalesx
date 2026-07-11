@@ -9,13 +9,21 @@ from trading_bot.cycle import CycleState
 from trading_bot.portfolio import Portfolio
 
 MAX_TRADES_SHOWN = 50
+MAX_EQUITY_POINTS_SHOWN = 500
+
+
+def _downsample(points: list, max_points: int) -> list:
+    if len(points) <= max_points:
+        return points
+    step = len(points) / max_points
+    return [points[int(i * step)] for i in range(max_points)]
 
 
 def write_dashboard_data(
     config: Config, portfolio: Portfolio, state: CycleState, path: str | Path
 ) -> None:
     """Writes a JSON snapshot the static dashboard page reads to render
-    balance, open positions, and recent trade history."""
+    balance, open positions, recent trade history, and an equity curve."""
     data = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "mode": config.mode,
@@ -38,6 +46,7 @@ def write_dashboard_data(
         ],
         "recent_trades": list(reversed(portfolio.trade_log[-MAX_TRADES_SHOWN:])),
         "total_trades": len(portfolio.trade_log),
+        "equity_history": _downsample(portfolio.equity_history, MAX_EQUITY_POINTS_SHOWN),
     }
 
     path = Path(path)
