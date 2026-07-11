@@ -9,10 +9,17 @@ name: Trading Bot Cycle
 # than merging it in.
 #
 # Manual run: Actions tab -> Trading Bot Cycle -> Run workflow.
+#
+# The cron below fires at :07/:22/:37/:52 rather than the more obvious
+# */15 (:00/:15/:30/:45). GitHub explicitly documents that scheduled runs
+# get delayed most at the top of the hour/quarter-hour, when every other
+# repo's cron jobs also fire -- offsetting the minute avoids piling into
+# that queue. This doesn't guarantee exact 15-minute spacing (GitHub's
+# scheduler is best-effort, not real-time), but it noticeably cuts delay.
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "7,22,37,52 * * * *"
   workflow_dispatch: {}
 
 permissions:
