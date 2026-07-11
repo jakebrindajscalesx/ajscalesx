@@ -1,0 +1,51 @@
+name: Trading Bot Backtest
+
+# On-demand only (no schedule): trains on the first 80% of history and
+# simulates the strategy on the held-out last 20%, so you can see real
+# historical performance numbers instead of trusting the strategy blind.
+# Doesn't touch live/paper state -- purely a research report.
+#
+# Run it: Actions tab -> Trading Bot Backtest -> Run workflow. Results show
+# up on the run's summary page when it finishes.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout trading-bot branch
+        uses: actions/checkout@v4
+        with:
+          ref: claude/trading-bot-dev-kvjqec
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        working-directory: trading-bot
+        run: pip install -r requirements.txt
+
+      - name: Prepare config
+        working-directory: trading-bot
+        run: |
+          [ -f config.yaml ] || cp config.example.yaml config.yaml
+
+      - name: Run backtest
+        working-directory: trading-bot
+        run: python backtest.py | tee /tmp/backtest_output.txt
+
+      - name: Post results to run summary
+        run: |
+          {
+            echo "## Backtest results"
+            echo '```'
+            cat /tmp/backtest_output.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

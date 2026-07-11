@@ -25,6 +25,8 @@ class ModelConfig:
     min_confidence: float
     horizon_candles: int
     label_return_threshold: float
+    require_trend_confirmation: bool = True
+    require_volume_confirmation: bool = True
 
 
 @dataclass
@@ -99,6 +101,8 @@ def load_config(config_path: str | Path | None = None) -> Config:
         min_confidence=float(model_raw.get("min_confidence", 0.6)),
         horizon_candles=int(model_raw.get("horizon_candles", 4)),
         label_return_threshold=float(model_raw.get("label_return_threshold", 0.006)),
+        require_trend_confirmation=bool(model_raw.get("require_trend_confirmation", True)),
+        require_volume_confirmation=bool(model_raw.get("require_volume_confirmation", True)),
     )
 
     risk_raw = raw["risk"]

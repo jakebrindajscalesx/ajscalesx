@@ -32,6 +32,11 @@ model:
   min_confidence: 0.60   # model must be at least this sure before entering
   horizon_candles: 4     # how many candles ahead the model predicts
   label_return_threshold: 0.006  # move needed to count as "up" when training
+  require_trend_confirmation: true   # only buy when price is above its own
+                                     # longer-term trend (trading with the
+                                     # trend, not against it)
+  require_volume_confirmation: true  # only buy when volume is rising
+                                     # (confirms conviction behind the move)
 
 risk:
   position_size_pct: 2.0     # % of account equity risked per new position

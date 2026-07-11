@@ -9,6 +9,7 @@ from trading_bot.config import Config
 from trading_bot.data import CandleStore
 from trading_bot.executor import Executor
 from trading_bot.features import compute_features, latest_feature_row
+from trading_bot.filters import passes_all_filters
 from trading_bot.logger import get_logger
 from trading_bot.model import predict_proba_up
 from trading_bot.portfolio import Portfolio
@@ -110,13 +111,22 @@ def run_one_cycle(
 
             manual = next((s for s in manual_signals if s.symbol == symbol), None)
             if manual:
+                # A manual signal is an explicit human decision -- it
+                # bypasses the model's confirmation filters the same way it
+                # bypasses the model itself.
                 signal_ = manual
             else:
                 row = feature_rows.get(symbol)
                 if row is None:
                     continue
                 proba = predict_proba_up(clf, row)
-                signal_ = Signal(symbol, "buy", "model", proba) if proba >= config.model.min_confidence else None
+                confident_enough = proba >= config.model.min_confidence
+                confirmed = passes_all_filters(
+                    row,
+                    require_trend=config.model.require_trend_confirmation,
+                    require_volume=config.model.require_volume_confirmation,
+                )
+                signal_ = Signal(symbol, "buy", "model", proba) if confident_enough and confirmed else None
 
             if signal_ is None:
                 continue

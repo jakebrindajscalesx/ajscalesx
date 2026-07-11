@@ -77,6 +77,31 @@ classifier that predicts whether price is likely to rise enough, soon
 enough, to be worth a long trade. Re-run this periodically (e.g. weekly) to
 retrain on fresh data — markets drift, an old model gets stale.
 
+### Check whether any of this actually works: backtest it
+
+```bash
+python backtest.py
+```
+
+Trains on the first 80% of history and simulates the exact signal + risk +
+filter logic candle-by-candle on the last 20%, which the model never saw
+during training. Reports real numbers: win rate, total return, max
+drawdown, profit factor. Run this after any change to `config.yaml`'s
+`model` or `risk` settings to see how the change would have performed
+historically, rather than trusting that it's an improvement.
+
+This doesn't place any orders and doesn't touch `state/` — it's a pure
+research report. It's also not a promise: good historical performance is a
+reason for more confidence, not a guarantee of future results. Also
+available as a one-click GitHub Actions run (see below) if you don't want
+to install anything locally.
+
+Two filters run on top of the model's confidence score by default
+(`model.require_trend_confirmation` / `require_volume_confirmation` in
+`config.yaml`): only buy when price is above its own longer-term trend, and
+only when volume is rising to confirm conviction behind the move. Standard,
+checkable day-trading risk principles — turn them off in config to compare.
+
 ### Run in paper mode (default, recommended starting point)
 
 ```bash
@@ -109,6 +134,10 @@ branch each time, and publishes a dashboard to GitHub Pages.
 - `run_once.py` retrains the model automatically if it's missing or more
   than 7 days old, so this is self-maintaining — nothing to run manually
   after initial setup.
+- `.github/workflows/trading-bot-backtest.yml` runs `backtest.py` the same
+  way, on demand only (Actions tab -> "Trading Bot Backtest" -> "Run
+  workflow") — results appear on that run's summary page, no local install
+  needed.
 
 ### Telegram alerts and manual signals (optional but recommended)
 
