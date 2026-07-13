@@ -1,6 +1,16 @@
 {
-  "cash": 1000.0,
-  "positions": {},
+  "cash": 980.0,
+  "positions": {
+    "ETH/USDT": {
+      "symbol": "ETH/USDT",
+      "qty": 0.011043622308117063,
+      "entry_price": 1811.0,
+      "stop_price": 1774.78,
+      "take_profit_price": 1883.44,
+      "opened_at": "2026-07-13T02:57:14.200644+00:00",
+      "live_order_id": null
+    }
+  },
   "trade_log": [],
   "equity_history": [
     {
@@ -57,6 +67,10 @@
     },
     {
       "t": "2026-07-13T02:16:55.813333+00:00",
+      "equity": 1000.0
+    },
+    {
+      "t": "2026-07-13T02:57:14.189606+00:00",
       "equity": 1000.0
     }
   ]
