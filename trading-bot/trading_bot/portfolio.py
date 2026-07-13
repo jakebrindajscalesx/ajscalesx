@@ -18,6 +18,7 @@ class Position:
 
 
 MAX_EQUITY_HISTORY_POINTS = 2000
+MAX_PRICE_HISTORY_POINTS = 2000
 
 
 @dataclass
@@ -26,6 +27,7 @@ class Portfolio:
     positions: dict[str, Position] = field(default_factory=dict)
     trade_log: list[dict] = field(default_factory=list)
     equity_history: list[dict] = field(default_factory=list)
+    price_history: dict[str, list[dict]] = field(default_factory=dict)
 
     def total_equity(self, current_prices: dict[str, float]) -> float:
         equity = self.cash
@@ -44,6 +46,17 @@ class Portfolio:
         )
         if len(self.equity_history) > MAX_EQUITY_HISTORY_POINTS:
             self.equity_history = self.equity_history[-MAX_EQUITY_HISTORY_POINTS:]
+
+    def record_prices(self, current_prices: dict[str, float], at: str | None = None) -> None:
+        """Appends a timestamped price snapshot per symbol, called once per
+        cycle, so the dashboard can chart actual price against a position's
+        entry/stop/take-profit lines instead of just the latest number."""
+        ts = at or datetime.now(timezone.utc).isoformat()
+        for symbol, price in current_prices.items():
+            history = self.price_history.setdefault(symbol, [])
+            history.append({"t": ts, "price": round(price, 8)})
+            if len(history) > MAX_PRICE_HISTORY_POINTS:
+                self.price_history[symbol] = history[-MAX_PRICE_HISTORY_POINTS:]
 
     def open_position(
         self,
@@ -96,6 +109,7 @@ class Portfolio:
             "positions": {k: asdict(v) for k, v in self.positions.items()},
             "trade_log": self.trade_log,
             "equity_history": self.equity_history,
+            "price_history": self.price_history,
         }
 
     @classmethod
@@ -106,6 +120,7 @@ class Portfolio:
             positions=positions,
             trade_log=data.get("trade_log", []),
             equity_history=data.get("equity_history", []),
+            price_history=data.get("price_history", {}),
         )
 
     def save(self, path: str | Path) -> None:

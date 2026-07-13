@@ -47,6 +47,10 @@ def write_dashboard_data(
         "recent_trades": list(reversed(portfolio.trade_log[-MAX_TRADES_SHOWN:])),
         "total_trades": len(portfolio.trade_log),
         "equity_history": _downsample(portfolio.equity_history, MAX_EQUITY_POINTS_SHOWN),
+        "price_history": {
+            symbol: _downsample(portfolio.price_history.get(symbol, []), MAX_EQUITY_POINTS_SHOWN)
+            for symbol in portfolio.positions
+        },
     }
 
     path = Path(path)

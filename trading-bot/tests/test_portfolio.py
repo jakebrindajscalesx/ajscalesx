@@ -92,3 +92,34 @@ def test_equity_history_persists_through_save_and_load(tmp_path):
 
     loaded = Portfolio.load_or_create(path, starting_balance=1.0)
     assert loaded.equity_history == p.equity_history
+
+
+def test_record_prices_appends_per_symbol_snapshot():
+    p = Portfolio(cash=1000.0)
+    p.record_prices({"BTC/USDT": 60000.0, "ETH/USDT": 1800.0}, at="2026-01-01T00:00:00+00:00")
+    p.record_prices({"BTC/USDT": 60100.0, "ETH/USDT": 1805.0}, at="2026-01-01T00:15:00+00:00")
+
+    assert len(p.price_history["BTC/USDT"]) == 2
+    assert p.price_history["BTC/USDT"][0] == {"t": "2026-01-01T00:00:00+00:00", "price": 60000.0}
+    assert p.price_history["ETH/USDT"][-1]["price"] == 1805.0
+
+
+def test_record_prices_caps_history_length_per_symbol():
+    p = Portfolio(cash=1000.0)
+    from trading_bot.portfolio import MAX_PRICE_HISTORY_POINTS
+
+    for i in range(MAX_PRICE_HISTORY_POINTS + 50):
+        p.record_prices({"BTC/USDT": 60000.0 + i}, at=f"t{i}")
+
+    assert len(p.price_history["BTC/USDT"]) == MAX_PRICE_HISTORY_POINTS
+    assert p.price_history["BTC/USDT"][-1]["t"] == f"t{MAX_PRICE_HISTORY_POINTS + 49}"
+
+
+def test_price_history_persists_through_save_and_load(tmp_path):
+    p = Portfolio(cash=1000.0)
+    p.record_prices({"BTC/USDT": 60000.0}, at="2026-01-01T00:00:00+00:00")
+    path = tmp_path / "portfolio.json"
+    p.save(path)
+
+    loaded = Portfolio.load_or_create(path, starting_balance=1.0)
+    assert loaded.price_history == p.price_history
