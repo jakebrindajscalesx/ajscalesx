@@ -61,6 +61,9 @@
     transform: translate(-50%, -110%); white-space: nowrap; opacity: 0; transition: opacity 0.1s;
   }
   .backtest-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 12px; }
+  .position-chart + .position-chart { margin-top: 16px; }
+  .position-chart-heading { font-size: 13px; color: var(--text-primary); font-weight: 600; margin-bottom: 4px; }
+  .position-chart-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
 </style>
 </head>
 <body>
@@ -80,6 +83,11 @@
 
   <h2>Open Positions</h2>
   <div id="positions"></div>
+
+  <div id="position-price-section" style="display:none;">
+    <h2>Position Price <span class="note">-- live price vs. entry/stop/target</span></h2>
+    <div id="position-price-charts"></div>
+  </div>
 
   <h2>Recent Trades</h2>
   <div id="trades"></div>
@@ -136,7 +144,8 @@ function renderLineChart(container, series, opts) {
   }
 
   const xs = allPoints.map(p => new Date(p.t).getTime());
-  const ys = allPoints.map(p => p.y);
+  const refLines = opts.refLines || [];
+  const ys = allPoints.map(p => p.y).concat(refLines.map(r => r.value));
   let yMin = Math.min(...ys), yMax = Math.max(...ys);
   if (yMin === yMax) { yMin -= 1; yMax += 1; }
   const yPad = (yMax - yMin) * 0.08;
@@ -173,12 +182,20 @@ function renderLineChart(container, series, opts) {
     }
   });
 
+  let refSvg = '';
+  refLines.forEach(r => {
+    const y = yScale(r.value);
+    refSvg += `<line x1="${padL}" y1="${y}" x2="${width - padR}" y2="${y}" stroke="${r.color}" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+    refSvg += `<text x="${width - padR}" y="${y - 4}" text-anchor="end" font-size="10" fill="${r.color}">${r.label}: ${opts.yPrefix || ''}${fmt(r.value, opts.yDecimals ?? 2)}</text>`;
+  });
+
   const cardId = 'chart-' + Math.random().toString(36).slice(2);
   container.innerHTML = `
     <div class="chart-card">
       ${legendHtml ? `<div class="chart-legend">${legendHtml}</div>` : ''}
       <svg class="chart-svg" id="${cardId}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
         ${gridSvg}
+        ${refSvg}
         ${linesSvg}
         <line class="crosshair" x1="0" y1="${padT}" x2="0" y2="${padT + innerH}" stroke="var(--baseline)" stroke-width="1" opacity="0"/>
         <rect x="${padL}" y="${padT}" width="${innerW}" height="${innerH}" fill="transparent" style="cursor:crosshair" id="${cardId}-overlay"/>
@@ -263,6 +280,45 @@ function renderPnlBarChart(container, trades) {
     </div>`;
 }
 
+/* ---------- one price chart per open position, entry/stop/target as ref lines ---------- */
+function renderPositionPriceCharts(positions, priceHistory) {
+  const section = document.getElementById('position-price-section');
+  const container = document.getElementById('position-price-charts');
+
+  if (!positions || positions.length === 0) {
+    section.style.display = 'none';
+    container.innerHTML = '';
+    return;
+  }
+
+  section.style.display = 'block';
+  container.innerHTML = positions.map(p => `
+    <div class="position-chart">
+      <div class="position-chart-heading">${p.symbol}</div>
+      <div class="position-chart-sub">Entry $${fmt(p.entry_price)} &middot; Stop $${fmt(p.stop_price)} &middot; Target $${fmt(p.take_profit_price)}</div>
+      <div id="position-chart-${cssId(p.symbol)}"></div>
+    </div>
+  `).join('');
+
+  positions.forEach(p => {
+    const points = (priceHistory[p.symbol] || []).map(pt => ({ t: pt.t, y: pt.price }));
+    renderLineChart(document.getElementById('position-chart-' + cssId(p.symbol)), [
+      { name: p.symbol, color: 'var(--series-1)', points }
+    ], {
+      yPrefix: '$', yDecimals: 2,
+      refLines: [
+        { value: p.entry_price, color: 'var(--text-muted)', label: 'Entry' },
+        { value: p.stop_price, color: 'var(--critical)', label: 'Stop' },
+        { value: p.take_profit_price, color: 'var(--good)', label: 'Target' },
+      ],
+    });
+  });
+}
+
+function cssId(symbol) {
+  return symbol.replace(/[^a-zA-Z0-9]/g, '-');
+}
+
 function render(data) {
   const badges = document.getElementById('badges');
   let badgeHtml = `<span class="badge ${data.mode}">${data.mode.toUpperCase()}</span>`;
@@ -316,6 +372,8 @@ function render(data) {
         <td>${new Date(p.opened_at).toLocaleString()}</td>
       </tr>`).join('') + `</tbody></table>`;
   }
+
+  renderPositionPriceCharts(data.open_positions, data.price_history || {});
 
   const tradesEl = document.getElementById('trades');
   if (data.recent_trades.length === 0) {
