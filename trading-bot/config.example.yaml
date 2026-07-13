@@ -29,7 +29,9 @@ loop_interval_seconds: 60
 
 model:
   path: models/model.joblib
-  min_confidence: 0.60   # model must be at least this sure before entering
+  min_confidence: 0.50   # TEMP: lowered from 0.60 for the same practice run
+                         # -- model must be at least this sure before
+                         # entering. Flip back to 0.60 when done practicing.
   horizon_candles: 4     # how many candles ahead the model predicts
   label_return_threshold: 0.006  # move needed to count as "up" when training
   require_trend_confirmation: false  # TEMP: off for a practice run so the
