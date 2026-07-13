@@ -87,13 +87,13 @@ def load_config(config_path: str | Path | None = None) -> Config:
     exchange = ExchangeConfig(
         name=exchange_raw["name"],
         testnet=bool(exchange_raw.get("testnet", True)),
-        api_key=os.environ.get("BINANCE_API_KEY", ""),
-        api_secret=os.environ.get("BINANCE_API_SECRET", ""),
+        api_key=os.environ.get("EXCHANGE_API_KEY", ""),
+        api_secret=os.environ.get("EXCHANGE_API_SECRET", ""),
     )
     if mode == "live" and not exchange.testnet and not (exchange.api_key and exchange.api_secret):
         raise ValueError(
-            "mode is 'live' with testnet false, but BINANCE_API_KEY / "
-            "BINANCE_API_SECRET are not set in .env. Refusing to start "
+            "mode is 'live' with testnet false, but EXCHANGE_API_KEY / "
+            "EXCHANGE_API_SECRET are not set in .env. Refusing to start "
             "live trading without real credentials."
         )
 

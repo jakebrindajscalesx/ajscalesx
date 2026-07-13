@@ -65,24 +65,43 @@ class PaperExecutor:
 class LiveExecutor:
     """Places real orders on the exchange.
 
-    IMPORTANT: this path places real orders and, outside of Binance testnet,
+    IMPORTANT: this path places real orders and, outside of a sandbox/testnet,
     real money moves. It has NOT been exercised against a live exchange from
     this development environment (no outbound network access to exchange
-    APIs here) -- it is written carefully against the documented ccxt/Binance
-    order API, but you must validate it on Binance Testnet with small size
-    before trusting it with real funds, and watch its logs the first several
-    times it trades live.
+    APIs here) -- it is written carefully against the documented ccxt order
+    API, but you must validate it with small size on a real (or, for
+    exchanges that support one, sandbox) account before trusting it with real
+    funds, and watch its logs the first several times it trades live. Kraken,
+    the default exchange, has no public spot testnet -- there is no way to
+    dry-run this against fake funds on Kraken the way Binance's path was
+    designed for, so "small size first" matters even more there.
 
-    Design choice: the stop-loss is placed as a real STOP_LOSS_LIMIT order on
+    Design choice: the stop-loss is placed as a real stop-loss-limit order on
     the exchange, so the position stays protected even if this bot process
     crashes or loses connectivity. Take-profit is monitored and executed by
     the bot itself (cancel the stop order, then market-sell) since OCO order
     support/behavior varies by ccxt version -- if the bot is down, you simply
     don't take profit exactly at target, but the stop-loss protection is
     unaffected.
+
+    The exact order "type" string for a stop-loss-limit order is exchange-
+    specific raw API vocabulary, not something ccxt fully unifies -- see
+    STOP_LOSS_LIMIT_ORDER_TYPE. Only exchanges listed there have been
+    reasoned through; open_position() refuses to place a real buy for any
+    other exchange rather than guess and risk buying with no way to protect
+    the position.
     """
 
     STOP_LIMIT_SLIPPAGE = 0.001  # stop-limit price set 0.1% below stop trigger
+
+    # Raw ccxt/exchange order-type string for a stop-loss-limit order, keyed
+    # by ccxt exchange id (client.id). Each exchange's REST API defines its
+    # own vocabulary here -- Binance's is "STOP_LOSS_LIMIT", Kraken's is
+    # "stop-loss-limit" -- ccxt does not normalize this for create_order.
+    STOP_LOSS_LIMIT_ORDER_TYPE = {
+        "kraken": "stop-loss-limit",
+        "binance": "STOP_LOSS_LIMIT",
+    }
 
     def __init__(self, client: ccxt.Exchange, portfolio: Portfolio, alert_fn: AlertFn | None = None):
         self.client = client
@@ -92,6 +111,16 @@ class LiveExecutor:
     def open_position(
         self, symbol: str, qty: float, price: float, stop_price: float, take_profit_price: float
     ) -> None:
+        stop_order_type = self.STOP_LOSS_LIMIT_ORDER_TYPE.get(self.client.id)
+        if stop_order_type is None:
+            raise NotImplementedError(
+                f"LiveExecutor doesn't know the stop-loss-limit order type for "
+                f"exchange '{self.client.id}'. Refusing to place a real buy "
+                f"that couldn't be protected by a stop order -- add it to "
+                f"STOP_LOSS_LIMIT_ORDER_TYPE after checking that exchange's "
+                f"raw order-type vocabulary."
+            )
+
         qty_str = self.client.amount_to_precision(symbol, qty)
         qty_adj = float(qty_str)
         if qty_adj <= 0:
@@ -101,28 +130,47 @@ class LiveExecutor:
         order = self.client.create_order(symbol, "market", "buy", qty_adj)
         fill_price = float(order.get("average") or order.get("price") or price)
 
+        # From here on, real money has already bought a real position on the
+        # exchange -- whatever happens next, we must not lose track of it.
+        # Everything below is best-effort protection layered on top of a
+        # fill that has already happened, not a precondition for recording it.
         stop_price_adj = float(self.client.price_to_precision(symbol, stop_price))
-        stop_limit_price = float(
-            self.client.price_to_precision(symbol, stop_price * (1 - self.STOP_LIMIT_SLIPPAGE))
-        )
-        stop_order = self.client.create_order(
-            symbol,
-            "STOP_LOSS_LIMIT",
-            "sell",
-            qty_adj,
-            stop_limit_price,
-            {"stopPrice": stop_price_adj},
-        )
+        live_order_id = None
+        try:
+            stop_limit_price = float(
+                self.client.price_to_precision(symbol, stop_price * (1 - self.STOP_LIMIT_SLIPPAGE))
+            )
+            stop_order = self.client.create_order(
+                symbol,
+                stop_order_type,
+                "sell",
+                qty_adj,
+                stop_limit_price,
+                {"stopPrice": stop_price_adj},
+            )
+            live_order_id = stop_order["id"]
+        except Exception as exc:
+            log.error(f"Stop-loss order failed for {symbol} after the buy already filled: {exc}")
 
         self.portfolio.open_position(
-            symbol, qty_adj, fill_price, stop_price_adj, take_profit_price, live_order_id=stop_order["id"]
+            symbol, qty_adj, fill_price, stop_price_adj, take_profit_price, live_order_id=live_order_id
         )
-        self.alert_fn(
-            f"[LIVE] Opened {symbol}: qty={qty_adj} @ {fill_price:.4f} "
-            f"(exchange stop-loss order {stop_order['id']} @ {stop_price_adj:.4f}, "
-            f"take-profit target {take_profit_price:.4f})"
-        )
-        log.info(f"Live opened {symbol} qty={qty_adj} fill_price={fill_price}")
+
+        if live_order_id is None:
+            self.alert_fn(
+                f"[LIVE] URGENT: Opened {symbol} qty={qty_adj} @ {fill_price:.4f} but the exchange "
+                f"stop-loss order FAILED to place. This position is currently UNPROTECTED on the "
+                f"exchange -- the bot will keep watching price and force-sell if it falls well past "
+                f"{stop_price_adj:.4f}, but until then it has no exchange-side protection. Check the "
+                f"logs and consider placing a manual stop order now."
+            )
+        else:
+            self.alert_fn(
+                f"[LIVE] Opened {symbol}: qty={qty_adj} @ {fill_price:.4f} "
+                f"(exchange stop-loss order {live_order_id} @ {stop_price_adj:.4f}, "
+                f"take-profit target {take_profit_price:.4f})"
+            )
+        log.info(f"Live opened {symbol} qty={qty_adj} fill_price={fill_price} live_order_id={live_order_id}")
 
     def check_exits(self, current_prices: dict[str, float]) -> None:
         for symbol in list(self.portfolio.positions.keys()):
