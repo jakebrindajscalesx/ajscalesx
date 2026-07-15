@@ -1,112 +1,156 @@
-import pytest
+import uuid
 
-from trading_bot.executor import LiveExecutor, PaperExecutor
+from trading_bot.executor import AlpacaExecutor
 from trading_bot.portfolio import Portfolio
 
 
-class _FakeClient:
-    """Minimal stand-in for the slice of ccxt.Exchange LiveExecutor uses."""
+class _FakeOrder:
+    def __init__(self, order_id, filled_avg_price=None, status="new"):
+        self.id = order_id
+        self.filled_avg_price = filled_avg_price
+        self.status = status
 
-    def __init__(self, exchange_id, stop_order_should_fail=False):
-        self.id = exchange_id
+
+class _FakeTradingClient:
+    """Minimal stand-in for the slice of alpaca.trading.client.TradingClient
+    AlpacaExecutor uses."""
+
+    def __init__(self, stop_order_should_fail=False):
         self.stop_order_should_fail = stop_order_should_fail
-        self.created_orders = []
+        self.submitted_orders = []
         self.cancelled_order_ids = []
-        self._next_order_id = 1
+        self._orders_by_id = {}
 
-    def amount_to_precision(self, symbol, qty):
-        return str(qty)
+    def submit_order(self, order_data):
+        from alpaca.trading.enums import OrderStatus
 
-    def price_to_precision(self, symbol, price):
-        return str(price)
-
-    def create_order(self, symbol, type_, side, amount, price=None, params=None):
-        if type_ != "market" and self.stop_order_should_fail:
+        if order_data.type.value == "stop_limit" and self.stop_order_should_fail:
             raise RuntimeError("exchange rejected stop order")
-        order_id = f"order-{self._next_order_id}"
-        self._next_order_id += 1
-        self.created_orders.append(
-            {"symbol": symbol, "type": type_, "side": side, "amount": amount, "price": price, "params": params}
-        )
-        return {"id": order_id, "average": price or 100.0}
 
-    def fetch_order(self, order_id, symbol):
-        return {"id": order_id, "status": "open"}
+        order_id = uuid.uuid4()
+        # Market orders fill immediately in this fake, at the requested
+        # price if one was implied, else a fixed stub price.
+        fill_price = getattr(order_data, "limit_price", None) or 100.0
+        status = OrderStatus.FILLED if order_data.type.value == "market" else OrderStatus.NEW
+        order = _FakeOrder(order_id, filled_avg_price=fill_price if status == OrderStatus.FILLED else None, status=status)
+        self.submitted_orders.append(order_data)
+        self._orders_by_id[str(order_id)] = order
+        return order
 
-    def cancel_order(self, order_id, symbol):
+    def get_order_by_id(self, order_id):
+        return self._orders_by_id[str(order_id)]
+
+    def cancel_order_by_id(self, order_id):
         self.cancelled_order_ids.append(order_id)
 
 
-def test_live_executor_refuses_to_buy_on_unsupported_exchange():
-    client = _FakeClient("some_unlisted_exchange")
+def _fast_executor(client, portfolio, alert_fn=None):
+    # fill_poll_delay_seconds=0 so tests don't actually sleep.
+    return AlpacaExecutor(client, portfolio, alert_fn=alert_fn, fill_poll_attempts=2, fill_poll_delay_seconds=0)
+
+
+def test_open_position_rounds_down_to_whole_shares_and_skips_if_zero():
+    client = _FakeTradingClient()
     portfolio = Portfolio(cash=1000.0)
-    executor = LiveExecutor(client, portfolio)
+    executor = _fast_executor(client, portfolio)
 
-    with pytest.raises(NotImplementedError):
-        executor.open_position("BTC/USDT", 0.01, 100.0, 98.0, 104.0)
+    # price implies qty < 1 share
+    executor.open_position("AAPL", qty=0.4, price=200.0, stop_price=196.0, take_profit_price=208.0)
 
-    # Critically: no real buy should have been placed either.
-    assert client.created_orders == []
+    assert client.submitted_orders == []
     assert portfolio.positions == {}
 
 
-def test_live_executor_places_market_buy_and_kraken_stop_loss_limit_order():
-    client = _FakeClient("kraken")
+def test_open_position_places_market_buy_and_gtc_stop_limit_sell():
+    client = _FakeTradingClient()
     portfolio = Portfolio(cash=1000.0)
-    executor = LiveExecutor(client, portfolio)
+    executor = _fast_executor(client, portfolio)
 
-    executor.open_position("BTC/USDT", 0.01, 100.0, 98.0, 104.0)
+    executor.open_position("AAPL", qty=2.7, price=100.0, stop_price=98.0, take_profit_price=104.0)
 
-    assert len(client.created_orders) == 2
-    buy, stop = client.created_orders
-    assert buy["type"] == "market" and buy["side"] == "buy"
-    assert stop["type"] == "stop-loss-limit" and stop["side"] == "sell"
+    assert len(client.submitted_orders) == 2
+    buy, stop = client.submitted_orders
+    assert buy.side.value == "buy" and buy.type.value == "market" and buy.qty == 2
+    assert stop.side.value == "sell" and stop.type.value == "stop_limit" and stop.time_in_force.value == "gtc"
+    assert stop.qty == 2
 
-    assert "BTC/USDT" in portfolio.positions
-    assert portfolio.positions["BTC/USDT"].live_order_id is not None
+    assert "AAPL" in portfolio.positions
+    pos = portfolio.positions["AAPL"]
+    assert pos.qty == 2
+    assert pos.live_order_id is not None
 
 
-def test_live_executor_still_records_position_when_stop_order_fails():
-    # Regression test: the buy already executes with real money before the
-    # stop order is attempted. If the stop order call throws, the position
-    # must still be recorded locally -- losing track of a real fill because
-    # a *protective* order failed would be worse than the failure itself.
-    client = _FakeClient("kraken", stop_order_should_fail=True)
+def test_open_position_still_records_fill_when_stop_order_fails():
+    # Regression test, same shape as the crypto-era fix: the buy already
+    # executes with real money before the stop order is attempted. If the
+    # stop order call throws, the position must still be recorded locally.
+    client = _FakeTradingClient(stop_order_should_fail=True)
     alerts = []
     portfolio = Portfolio(cash=1000.0)
-    executor = LiveExecutor(client, portfolio, alert_fn=alerts.append)
+    executor = _fast_executor(client, portfolio, alert_fn=alerts.append)
 
-    executor.open_position("BTC/USDT", 0.01, 100.0, 98.0, 104.0)
+    executor.open_position("AAPL", qty=2.0, price=100.0, stop_price=98.0, take_profit_price=104.0)
 
-    # The buy still went through even though the stop order failed.
-    assert len(client.created_orders) == 1
-    assert client.created_orders[0]["type"] == "market"
-
-    assert "BTC/USDT" in portfolio.positions
-    assert portfolio.positions["BTC/USDT"].live_order_id is None
-
+    assert len(client.submitted_orders) == 1
+    assert "AAPL" in portfolio.positions
+    assert portfolio.positions["AAPL"].live_order_id is None
     assert any("URGENT" in msg for msg in alerts)
 
 
-def test_live_executor_check_exits_force_sells_unprotected_position_past_stop():
-    client = _FakeClient("kraken", stop_order_should_fail=True)
+def test_check_exits_closes_position_when_stop_order_reports_filled():
+    client = _FakeTradingClient()
     portfolio = Portfolio(cash=1000.0)
-    executor = LiveExecutor(client, portfolio)
-    executor.open_position("BTC/USDT", 0.01, 100.0, 98.0, 104.0)
-    assert portfolio.positions["BTC/USDT"].live_order_id is None
+    executor = _fast_executor(client, portfolio)
+    executor.open_position("AAPL", qty=2.0, price=100.0, stop_price=98.0, take_profit_price=104.0)
 
-    # Price craters well past the (unenforced, since the exchange order
-    # failed) stop -- the bot's own safety net should force a market sell.
-    executor.check_exits({"BTC/USDT": 96.0})
+    stop_order_id = portfolio.positions["AAPL"].live_order_id
+    from alpaca.trading.enums import OrderStatus
 
-    assert "BTC/USDT" not in portfolio.positions
-    sell_orders = [o for o in client.created_orders if o["side"] == "sell"]
-    assert len(sell_orders) == 1
+    client._orders_by_id[stop_order_id].status = OrderStatus.FILLED
+    client._orders_by_id[stop_order_id].filled_avg_price = 98.0
+
+    executor.check_exits({"AAPL": 98.0})
+
+    assert "AAPL" not in portfolio.positions
+    assert portfolio.trade_log[-1]["reason"] == "stop_loss"
+
+
+def test_check_exits_takes_profit_and_cancels_stop_order():
+    client = _FakeTradingClient()
+    portfolio = Portfolio(cash=1000.0)
+    executor = _fast_executor(client, portfolio)
+    executor.open_position("AAPL", qty=2.0, price=100.0, stop_price=98.0, take_profit_price=104.0)
+    stop_order_id = portfolio.positions["AAPL"].live_order_id
+
+    executor.check_exits({"AAPL": 105.0})
+
+    assert "AAPL" not in portfolio.positions
+    assert portfolio.trade_log[-1]["reason"] == "take_profit"
+    assert stop_order_id in client.cancelled_order_ids
+
+
+def test_check_exits_force_sells_unprotected_position_past_stop():
+    client = _FakeTradingClient(stop_order_should_fail=True)
+    portfolio = Portfolio(cash=1000.0)
+    executor = _fast_executor(client, portfolio)
+    executor.open_position("AAPL", qty=2.0, price=100.0, stop_price=98.0, take_profit_price=104.0)
+    assert portfolio.positions["AAPL"].live_order_id is None
+
+    executor.check_exits({"AAPL": 96.0})
+
+    assert "AAPL" not in portfolio.positions
     assert portfolio.trade_log[-1]["reason"] == "forced_stop"
 
 
-def test_paper_executor_unaffected_by_live_executor_changes():
+def test_close_position_manually_cancels_stop_and_sells():
+    client = _FakeTradingClient()
     portfolio = Portfolio(cash=1000.0)
-    executor = PaperExecutor(portfolio)
-    executor.open_position("BTC/USDT", 0.01, 100.0, 98.0, 104.0)
-    assert "BTC/USDT" in portfolio.positions
+    executor = _fast_executor(client, portfolio)
+    executor.open_position("AAPL", qty=2.0, price=100.0, stop_price=98.0, take_profit_price=104.0)
+    stop_order_id = portfolio.positions["AAPL"].live_order_id
+
+    executor.close_position_manually("AAPL", price=101.0)
+
+    assert "AAPL" not in portfolio.positions
+    assert portfolio.trade_log[-1]["reason"] == "manual"
+    assert stop_order_id in client.cancelled_order_ids

@@ -1,27 +1,26 @@
 # Copy to config.yaml and adjust. config.yaml is the bot's single source of truth
 # for how it behaves. API keys/tokens are NOT in here -- those go in .env.
 
-mode: paper              # paper = simulated fills on live prices, no risk.
-                         # live  = real orders on real money. Only switch this
-                         #         after you've watched paper mode run and
-                         #         understand its behavior.
+mode: paper              # paper = orders placed through Alpaca's own free
+                         # paper-trading broker (simulated fills, fake
+                         # money, real order lifecycle). live = real orders
+                         # on real money. Only switch this after you've
+                         # watched paper mode run and understand its
+                         # behavior. Both modes need Alpaca API keys in
+                         # .env -- see the README for how to get them.
 
-exchange:
-  # Kraken, not Binance: Binance blocks requests from US-based IPs (incl.
-  # GitHub Actions' US runners) with an HTTP 451. Kraken serves US IPs fine
-  # and ccxt supports it the same way. If you're running this somewhere
-  # with a non-US IP and want Binance instead, change this to "binance".
-  name: kraken
-  testnet: true          # only used when mode is "live". NOTE: unlike
-                         # Binance, Kraken has no public spot testnet/sandbox
-                         # -- this flag has no effect for Kraken. Going live
-                         # on Kraken needs its own careful validation (small
-                         # size first) since it can't be dry-run against fake
-                         # funds the way the Binance path was designed for.
-
-symbols:                 # markets the bot watches and can trade
-  - BTC/USDT
-  - ETH/USDT
+symbols:                 # US-listed stocks/ETFs the bot watches and can
+                         # trade. Any ticker Alpaca supports works here --
+                         # these three are deliberately lower-priced,
+                         # liquid names rather than something like SPY/QQQ:
+                         # positions are always whole shares (see README),
+                         # so with risk.position_size_pct/paper.starting_
+                         # balance_usd below, a $400+ ETF share would round
+                         # down to 0 shares almost every time and the bot
+                         # would never trade it at all.
+  - F
+  - SOFI
+  - PLTR
 
 timeframe: 15m           # candle size used for features/signals
 history_candles: 500     # candles of history kept in memory per symbol
@@ -57,7 +56,7 @@ risk:
                              # once realized+unrealized loss hits this %
 
 paper:
-  starting_balance_usdt: 1000
+  starting_balance_usd: 1000
 
 telegram:
   enabled: false        # set true once TELEGRAM_BOT_TOKEN/CHAT_ID are in .env

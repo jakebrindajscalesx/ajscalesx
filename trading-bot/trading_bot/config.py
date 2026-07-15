@@ -33,8 +33,11 @@ class ModelConfig:
 
 @dataclass
 class ExchangeConfig:
-    name: str
-    testnet: bool
+    """Alpaca account credentials. Which of Alpaca's two environments gets
+    used -- its free paper-trading broker or real live trading -- is decided
+    by config.mode (paper/live), not a separate flag here: Alpaca genuinely
+    has both, unlike Kraken which had no sandbox at all."""
+
     api_key: str = ""
     api_secret: str = ""
 
@@ -57,7 +60,7 @@ class Config:
     loop_interval_seconds: int
     model: ModelConfig
     risk: RiskConfig
-    paper_starting_balance_usdt: float
+    paper_starting_balance_usd: float
     telegram: TelegramConfig
     raw: dict = field(default_factory=dict)
 
@@ -83,18 +86,20 @@ def load_config(config_path: str | Path | None = None) -> Config:
     if mode not in ("paper", "live"):
         raise ValueError(f"config.mode must be 'paper' or 'live', got {mode!r}")
 
-    exchange_raw = raw["exchange"]
     exchange = ExchangeConfig(
-        name=exchange_raw["name"],
-        testnet=bool(exchange_raw.get("testnet", True)),
         api_key=os.environ.get("EXCHANGE_API_KEY", ""),
         api_secret=os.environ.get("EXCHANGE_API_SECRET", ""),
     )
-    if mode == "live" and not exchange.testnet and not (exchange.api_key and exchange.api_secret):
+    # Unlike Kraken's public keyless ticker data, Alpaca requires an API
+    # key/secret to fetch market data at all -- for paper trading too, not
+    # just live. There's no mode where this bot can run with zero account.
+    if not (exchange.api_key and exchange.api_secret):
         raise ValueError(
-            "mode is 'live' with testnet false, but EXCHANGE_API_KEY / "
-            "EXCHANGE_API_SECRET are not set in .env. Refusing to start "
-            "live trading without real credentials."
+            "EXCHANGE_API_KEY / EXCHANGE_API_SECRET are not set in .env. "
+            "Alpaca requires an API key/secret for market data in both "
+            "paper and live mode -- create a free account at "
+            "https://alpaca.markets, generate paper trading API keys, and "
+            "put them in .env (or as repo secrets for GitHub Actions)."
         )
 
     model_raw = raw["model"]
@@ -140,7 +145,7 @@ def load_config(config_path: str | Path | None = None) -> Config:
         loop_interval_seconds=int(raw.get("loop_interval_seconds", 60)),
         model=model,
         risk=risk,
-        paper_starting_balance_usdt=float(raw["paper"]["starting_balance_usdt"]),
+        paper_starting_balance_usd=float(raw["paper"]["starting_balance_usd"]),
         telegram=telegram,
         raw=raw,
     )

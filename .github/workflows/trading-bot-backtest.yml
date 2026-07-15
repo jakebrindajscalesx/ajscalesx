@@ -7,6 +7,11 @@ name: Trading Bot Backtest
 #
 # Run it: Actions tab -> Trading Bot Backtest -> Run workflow. Results show
 # up on the run's summary page when it finishes.
+#
+# Requires EXCHANGE_API_KEY / EXCHANGE_API_SECRET repo secrets (Settings ->
+# Secrets and variables -> Actions) -- Alpaca requires an API key/secret to
+# fetch market data even for this read-only backtest. See
+# trading-bot/README.md for how to get free paper trading keys.
 
 on:
   workflow_dispatch: {}
@@ -39,6 +44,9 @@ jobs:
 
       - name: Run backtest
         working-directory: trading-bot
+        env:
+          EXCHANGE_API_KEY: ${{ secrets.EXCHANGE_API_KEY }}
+          EXCHANGE_API_SECRET: ${{ secrets.EXCHANGE_API_SECRET }}
         run: |
           set -o pipefail
           python backtest.py | tee /tmp/backtest_output.txt

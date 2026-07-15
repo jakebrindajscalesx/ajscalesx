@@ -1,47 +1,106 @@
 from __future__ import annotations
 
-import ccxt
+import re
+from dataclasses import dataclass
+
 import pandas as pd
+from alpaca.data.enums import DataFeed
+from alpaca.data.historical import StockHistoricalDataClient
+from alpaca.data.requests import StockBarsRequest, StockLatestTradeRequest
+from alpaca.data.timeframe import TimeFrame, TimeFrameUnit
+from alpaca.trading.client import TradingClient
 
 from trading_bot.config import Config
 from trading_bot.logger import get_logger
 
 log = get_logger(__name__)
 
+# Alpaca's free data plan serves the IEX feed (one US exchange's trades/
+# quotes, not the full consolidated SIP tape covering every exchange) --
+# fine for this bot's purposes and avoids the SIP feed's paid subscription
+# requirement.
+DATA_FEED = DataFeed.IEX
 
-def build_exchange(config: Config) -> ccxt.Exchange:
-    """Build a ccxt exchange client.
+_TIMEFRAME_PATTERN = re.compile(r"^(\d+)([mhd])$")
+_TIMEFRAME_UNITS = {"m": TimeFrameUnit.Minute, "h": TimeFrameUnit.Hour, "d": TimeFrameUnit.Day}
 
-    Market data (OHLCV, ticker prices) works without API keys regardless of
-    mode. API keys are only required, and only used, for order placement in
-    live mode.
+
+def parse_timeframe(timeframe: str) -> TimeFrame:
+    """Parses a "15m"/"1h"/"1d"-style config string into an Alpaca TimeFrame."""
+    match = _TIMEFRAME_PATTERN.match(timeframe.strip().lower())
+    if not match:
+        raise ValueError(f"Unrecognized timeframe {timeframe!r}, expected e.g. '15m', '1h', '1d'")
+    amount, unit = match.groups()
+    return TimeFrame(int(amount), _TIMEFRAME_UNITS[unit])
+
+
+@dataclass
+class AlpacaClients:
+    """Bundles the two Alpaca clients the bot needs: trading (orders,
+    account, market clock) and historical market data. Both point at the
+    same paper/live environment."""
+
+    trading: TradingClient
+    data: StockHistoricalDataClient
+
+
+def build_exchange(config: Config) -> AlpacaClients:
+    """Builds the Alpaca clients for the configured mode.
+
+    Unlike Kraken, Alpaca requires an API key/secret for market data in
+    both paper and live mode -- config.py already refuses to load without
+    them. mode: paper uses Alpaca's own free paper-trading environment
+    (fake money, real simulated order lifecycle, same order-placement code
+    path as live); mode: live places real orders with real money.
     """
-    exchange_class = getattr(ccxt, config.exchange.name)
-    client = exchange_class(
-        {
-            "apiKey": config.exchange.api_key or None,
-            "secret": config.exchange.api_secret or None,
-            "enableRateLimit": True,
-        }
+    trading = TradingClient(
+        api_key=config.exchange.api_key,
+        secret_key=config.exchange.api_secret,
+        paper=not config.is_live,
     )
-    if config.is_live and config.exchange.testnet:
-        client.set_sandbox_mode(True)
-        log.info("Exchange client in TESTNET mode (sandbox trading, fake funds).")
-    elif config.is_live:
+    data = StockHistoricalDataClient(
+        api_key=config.exchange.api_key,
+        secret_key=config.exchange.api_secret,
+    )
+    if config.is_live:
         log.warning("Exchange client in LIVE mode with REAL FUNDS.")
     else:
-        log.info("Exchange client in paper mode: live market data, simulated orders.")
-    return client
+        log.info("Exchange client in Alpaca PAPER mode: simulated fills, fake money.")
+    return AlpacaClients(trading=trading, data=data)
 
 
-def fetch_ohlcv_df(client: ccxt.Exchange, symbol: str, timeframe: str, limit: int) -> pd.DataFrame:
-    raw = client.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
-    df = pd.DataFrame(raw, columns=["timestamp", "open", "high", "low", "close", "volume"])
-    df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
-    df.set_index("timestamp", inplace=True)
-    return df
+def is_market_open(client: AlpacaClients) -> bool:
+    """Stocks only trade during NYSE hours on weekdays (unlike crypto's
+    24/7 market) -- callers should skip fetching/trading entirely when
+    this is False rather than act on stale or nonexistent data."""
+    return bool(client.trading.get_clock().is_open)
 
 
-def fetch_last_price(client: ccxt.Exchange, symbol: str) -> float:
-    ticker = client.fetch_ticker(symbol)
-    return float(ticker["last"])
+def fetch_ohlcv_df(client: AlpacaClients, symbol: str, timeframe: str, limit: int) -> pd.DataFrame:
+    request = StockBarsRequest(
+        symbol_or_symbols=symbol,
+        timeframe=parse_timeframe(timeframe),
+        limit=limit,
+        feed=DATA_FEED,
+    )
+    bars = client.data.get_stock_bars(request)
+    df = bars.df
+    if df.empty:
+        return pd.DataFrame(columns=["open", "high", "low", "close", "volume"])
+    df = df.xs(symbol, level="symbol")
+    df.index.name = "timestamp"
+    return df[["open", "high", "low", "close", "volume"]]
+
+
+def fetch_last_price(client: AlpacaClients, symbol: str) -> float:
+    request = StockLatestTradeRequest(symbol_or_symbols=symbol, feed=DATA_FEED)
+    trades = client.data.get_stock_latest_trade(request)
+    return float(trades[symbol].price)
+
+
+def fetch_account_cash(client: AlpacaClients) -> float:
+    """Used to seed the local Portfolio ledger's starting cash the very
+    first time the bot runs in live mode, from Alpaca's real account
+    balance. Every later run loads persisted state instead -- this only
+    matters once, before state/portfolio.json exists."""
+    return float(client.trading.get_account().cash)

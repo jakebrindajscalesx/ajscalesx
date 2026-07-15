@@ -30,7 +30,7 @@ def write_dashboard_data(
         "symbols": config.symbols,
         "equity": round(state.equity, 4),
         "cash": round(portfolio.cash, 4),
-        "starting_balance": config.paper_starting_balance_usdt,
+        "starting_balance": config.paper_starting_balance_usd,
         "paused": state.paused,
         "circuit_breaker_tripped": state.breaker_tripped,
         "open_positions": [

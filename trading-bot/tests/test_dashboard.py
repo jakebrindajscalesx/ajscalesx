@@ -11,8 +11,8 @@ class _FakeModelConfig:
 
 class _FakeConfig:
     mode = "paper"
-    symbols = ["BTC/USDT"]
-    paper_starting_balance_usdt = 1000.0
+    symbols = ["SPY"]
+    paper_starting_balance_usd = 1000.0
 
 
 def test_write_dashboard_data_includes_equity_history(tmp_path):

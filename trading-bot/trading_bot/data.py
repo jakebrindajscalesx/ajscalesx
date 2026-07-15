@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-import ccxt
 import pandas as pd
 
-from trading_bot.exchange import fetch_ohlcv_df
+from trading_bot.exchange import AlpacaClients, fetch_ohlcv_df
 
 
 class CandleStore:
     """Keeps a rolling window of OHLCV candles per symbol in memory."""
 
-    def __init__(self, client: ccxt.Exchange, timeframe: str, history_candles: int):
+    def __init__(self, client: AlpacaClients, timeframe: str, history_candles: int):
         self.client = client
         self.timeframe = timeframe
         self.history_candles = history_candles

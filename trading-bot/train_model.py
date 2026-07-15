@@ -5,8 +5,9 @@ Run this before starting the bot for the first time, and periodically
 
     python train_model.py
 
-Uses only public market data endpoints -- no API keys needed even for
-Binance, regardless of paper/live mode.
+Needs Alpaca API keys in .env (EXCHANGE_API_KEY/EXCHANGE_API_SECRET) --
+unlike Kraken, Alpaca requires a key/secret for market data regardless of
+paper/live mode.
 """
 from __future__ import annotations
 
@@ -15,36 +16,20 @@ import sys
 import pandas as pd
 
 from trading_bot.config import load_config
-from trading_bot.exchange import build_exchange
+from trading_bot.exchange import AlpacaClients, build_exchange, fetch_ohlcv_df
 from trading_bot.logger import get_logger
 from trading_bot.model import save_model, train_model
 
 log = get_logger("train_model")
 
-TRAIN_CANDLES = 5000  # paginate to gather this many candles per symbol
+TRAIN_CANDLES = 5000  # candles to gather per symbol
 
 
-def fetch_history(client, symbol: str, timeframe: str, total_candles: int) -> pd.DataFrame:
-    all_rows: list[list] = []
-    since = None
-    remaining = total_candles
-    while remaining > 0:
-        batch_limit = min(1000, remaining)
-        batch = client.fetch_ohlcv(symbol, timeframe=timeframe, since=since, limit=batch_limit)
-        if not batch:
-            break
-        all_rows = batch + all_rows
-        oldest_ts = batch[0][0]
-        since = oldest_ts - (batch_limit * client.parse_timeframe(timeframe) * 1000)
-        remaining -= len(batch)
-        if len(batch) < batch_limit:
-            break
-
-    df = pd.DataFrame(all_rows, columns=["timestamp", "open", "high", "low", "close", "volume"])
-    df = df.drop_duplicates(subset="timestamp").sort_values("timestamp")
-    df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
-    df.set_index("timestamp", inplace=True)
-    return df
+def fetch_history(client: AlpacaClients, symbol: str, timeframe: str, total_candles: int) -> pd.DataFrame:
+    """Thin wrapper so callers don't need to know it's really just a bigger
+    fetch_ohlcv_df call -- alpaca-py paginates internally up to `limit`,
+    unlike ccxt where this used to hand-roll pagination in batches of 1000."""
+    return fetch_ohlcv_df(client, symbol, timeframe, total_candles)
 
 
 def main() -> int:

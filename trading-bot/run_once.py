@@ -20,8 +20,8 @@ from trading_bot.config import load_config
 from trading_bot.cycle import CycleState, run_one_cycle
 from trading_bot.dashboard import write_dashboard_data
 from trading_bot.data import CandleStore
-from trading_bot.exchange import build_exchange
-from trading_bot.executor import LiveExecutor, PaperExecutor
+from trading_bot.exchange import build_exchange, fetch_account_cash
+from trading_bot.executor import AlpacaExecutor
 from trading_bot.features import FEATURE_COLUMNS
 from trading_bot.logger import get_logger
 from trading_bot.model import load_model, save_model, train_model
@@ -87,14 +87,13 @@ def main() -> int:
 
     if config.is_live:
         try:
-            balance = client.fetch_balance()
-            starting_cash = float(balance.get("USDT", {}).get("free", 0))
+            starting_cash = fetch_account_cash(client)
         except Exception as exc:
             log.error(f"Could not fetch live account balance: {exc}")
             return 1
         portfolio = Portfolio.load_or_create(PORTFOLIO_STATE_PATH, starting_cash)
     else:
-        portfolio = Portfolio.load_or_create(PORTFOLIO_STATE_PATH, config.paper_starting_balance_usdt)
+        portfolio = Portfolio.load_or_create(PORTFOLIO_STATE_PATH, config.paper_starting_balance_usd)
 
     telegram = None
     if config.telegram.enabled:
@@ -105,7 +104,7 @@ def main() -> int:
         if telegram:
             telegram.send(msg)
 
-    executor = LiveExecutor(client, portfolio, alert) if config.is_live else PaperExecutor(portfolio, alert)
+    executor = AlpacaExecutor(client.trading, portfolio, alert)
     circuit_breaker = DailyCircuitBreaker.load_or_create(CIRCUIT_BREAKER_STATE_PATH, config.risk.max_daily_loss_pct)
     state = CycleState()
 

@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import ccxt
 from sklearn.ensemble import GradientBoostingClassifier
 
 from trading_bot.config import Config
 from trading_bot.data import CandleStore
-from trading_bot.executor import Executor
+from trading_bot.exchange import AlpacaClients, is_market_open
+from trading_bot.executor import AlpacaExecutor
 from trading_bot.features import compute_features, latest_feature_row
 from trading_bot.filters import passes_all_filters
 from trading_bot.logger import get_logger
@@ -39,11 +39,11 @@ class CycleState:
 
 def run_one_cycle(
     config: Config,
-    client: ccxt.Exchange,
+    client: AlpacaClients,
     candle_store: CandleStore,
     clf: GradientBoostingClassifier,
     portfolio: Portfolio,
-    executor: Executor,
+    executor: AlpacaExecutor,
     circuit_breaker: DailyCircuitBreaker,
     telegram: TelegramClient | None,
     state: CycleState,
@@ -51,7 +51,15 @@ def run_one_cycle(
     """Runs one full decision cycle: refresh data, manage exits, process any
     manual Telegram commands, and open new positions if signals say to.
     Mutates portfolio/circuit_breaker in place; returns updated CycleState.
+
+    Stocks only trade during NYSE hours, unlike crypto's 24/7 market -- if
+    the market is closed this does nothing at all (no fetch, no exits, no
+    equity/price recording) rather than act on stale or nonexistent data.
     """
+    if not is_market_open(client):
+        log.info("Market is closed, skipping this cycle.")
+        return state
+
     current_prices: dict[str, float] = {}
     feature_rows = {}
 
