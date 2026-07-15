@@ -10,6 +10,11 @@ name: Trading Bot Cycle
 #
 # Manual run: Actions tab -> Trading Bot Cycle -> Run workflow.
 #
+# Requires EXCHANGE_API_KEY / EXCHANGE_API_SECRET repo secrets (Settings ->
+# Secrets and variables -> Actions) -- Alpaca requires an API key/secret to
+# fetch market data even in paper mode. Without them this fails on every
+# run. See trading-bot/README.md for how to get free paper trading keys.
+#
 # The cron below fires at :07/:22/:37/:52 rather than the more obvious
 # */15 (:00/:15/:30/:45). GitHub explicitly documents that scheduled runs
 # get delayed most at the top of the hour/quarter-hour, when every other
