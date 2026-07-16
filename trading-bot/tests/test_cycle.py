@@ -34,4 +34,31 @@ def test_run_one_cycle_does_nothing_when_market_is_closed(monkeypatch):
     candle_store.refresh.assert_not_called()
     executor.check_exits.assert_not_called()
     assert portfolio.equity_history == []
-    assert result is state
+    assert result.paused == state.paused
+    assert result.breaker_tripped == state.breaker_tripped
+
+
+def test_run_one_cycle_reports_real_equity_when_market_closed_on_a_fresh_portfolio(monkeypatch):
+    # Regression test: the market-closed early return used to hand back the
+    # caller's untouched incoming CycleState, which on a fresh portfolio
+    # (no prior cycle ever ran) defaults to equity=0.0 -- making a brand
+    # new $1000 account look like a total loss on the dashboard before the
+    # bot had done anything at all.
+    monkeypatch.setattr(cycle_module, "is_market_open", lambda client: False)
+
+    portfolio = Portfolio(cash=1000.0)
+    state = CycleState()  # fresh default: equity=0.0
+
+    result = run_one_cycle(
+        config=MagicMock(symbols=["SPY"]),
+        client=MagicMock(),
+        candle_store=MagicMock(),
+        clf=MagicMock(),
+        portfolio=portfolio,
+        executor=MagicMock(),
+        circuit_breaker=DailyCircuitBreaker(max_daily_loss_pct=5.0),
+        telegram=None,
+        state=state,
+    )
+
+    assert result.equity == 1000.0

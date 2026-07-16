@@ -58,7 +58,17 @@ def run_one_cycle(
     """
     if not is_market_open(client):
         log.info("Market is closed, skipping this cycle.")
-        return state
+        # Still report real current equity (cash + any open positions
+        # valued at their entry price, since there's no live price to use)
+        # rather than returning the caller's untouched incoming state --
+        # on a brand new portfolio that state defaults to equity=0.0,
+        # which would make the dashboard show a fresh $1000 account as a
+        # total loss before it's ever done anything.
+        return CycleState(
+            paused=state.paused,
+            equity=portfolio.total_equity({}),
+            breaker_tripped=state.breaker_tripped,
+        )
 
     current_prices: dict[str, float] = {}
     feature_rows = {}
