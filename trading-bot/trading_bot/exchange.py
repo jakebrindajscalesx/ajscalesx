@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 
 import pandas as pd
 from alpaca.data.enums import DataFeed
@@ -76,10 +77,36 @@ def is_market_open(client: AlpacaClients) -> bool:
     return bool(client.trading.get_clock().is_open)
 
 
+# Trading-hours-per-day estimates used only to size a generous lookback
+# window -- overestimating just means the request's `limit` still caps the
+# result, underestimating would mean too few bars come back.
+_TRADING_MINUTES_PER_DAY = 390  # 6.5 hours, NYSE regular session
+_CALENDAR_DAYS_PER_TRADING_DAY = 7 / 5  # padding for weekends
+_LOOKBACK_SAFETY_MULTIPLIER = 1.5  # extra padding for holidays/early closes
+_MIN_LOOKBACK_DAYS = 10
+
+
+def _lookback_start(tf: TimeFrame, limit: int) -> datetime:
+    """Alpaca's bars endpoint expects an explicit start (or returns no bars
+    at all if start/end are both omitted and only `limit` is given, even
+    though the SDK's request model doesn't require start) -- so this always
+    computes one generously rather than relying on limit alone."""
+    if tf.unit == TimeFrameUnit.Day:
+        calendar_days = limit * _CALENDAR_DAYS_PER_TRADING_DAY * _LOOKBACK_SAFETY_MULTIPLIER
+    else:
+        minutes_per_bar = tf.amount * (60 if tf.unit == TimeFrameUnit.Hour else 1)
+        trading_days_needed = (limit * minutes_per_bar) / _TRADING_MINUTES_PER_DAY
+        calendar_days = trading_days_needed * _CALENDAR_DAYS_PER_TRADING_DAY * _LOOKBACK_SAFETY_MULTIPLIER
+    calendar_days = max(calendar_days, _MIN_LOOKBACK_DAYS)
+    return datetime.now(timezone.utc) - timedelta(days=calendar_days)
+
+
 def fetch_ohlcv_df(client: AlpacaClients, symbol: str, timeframe: str, limit: int) -> pd.DataFrame:
+    tf = parse_timeframe(timeframe)
     request = StockBarsRequest(
         symbol_or_symbols=symbol,
-        timeframe=parse_timeframe(timeframe),
+        timeframe=tf,
+        start=_lookback_start(tf, limit),
         limit=limit,
         feed=DATA_FEED,
     )

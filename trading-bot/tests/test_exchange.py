@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 import pandas as pd
 import pytest
 
@@ -115,6 +117,48 @@ def test_fetch_ohlcv_df_returns_empty_frame_with_expected_columns_when_no_bars()
     df = fetch_ohlcv_df(clients, "SPY", "15m", 500)
     assert list(df.columns) == ["open", "high", "low", "close", "volume"]
     assert len(df) == 0
+
+
+def test_fetch_ohlcv_df_always_sends_an_explicit_start():
+    # Regression test: Alpaca's bars endpoint returned zero bars in
+    # practice when start/end were both omitted and only `limit` was set,
+    # even though nothing in the SDK's request model requires start. Every
+    # request must carry an explicit start from here on.
+    data_client = _FakeDataClient(bars_df=_multi_index_bars_df("SPY"))
+    clients = AlpacaClients(trading=_FakeTradingClient(), data=data_client)
+
+    fetch_ohlcv_df(clients, "SPY", "15m", 500)
+
+    # StockBarsRequest normalizes start to a naive UTC datetime internally
+    # (confirmed its to_request_fields() still serializes the timezone
+    # offset correctly for the actual outgoing request) -- compare against
+    # a naive "now" here to match.
+    assert data_client.last_bars_request.start is not None
+    assert data_client.last_bars_request.start < datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+@pytest.mark.parametrize(
+    "timeframe,limit",
+    [("15m", 500), ("15m", 2000), ("1h", 500), ("1d", 200)],
+)
+def test_lookback_start_is_generously_in_the_past_and_covers_the_requested_limit(timeframe, limit):
+    from alpaca.data.timeframe import TimeFrameUnit
+
+    from trading_bot.exchange import _lookback_start, parse_timeframe
+
+    tf = parse_timeframe(timeframe)
+    start = _lookback_start(tf, limit)
+    now = datetime.now(timezone.utc)
+    assert start < now
+
+    # At minimum, the naive number of calendar minutes implied by
+    # limit * timeframe should fit within the computed window (sanity
+    # floor -- the real computation pads well beyond this for
+    # weekends/holidays).
+    if tf.unit != TimeFrameUnit.Day:
+        unit_minutes = 60 if tf.unit == TimeFrameUnit.Hour else 1
+        naive_minutes_needed = tf.amount * unit_minutes * limit
+        assert (now - start).total_seconds() / 60 >= naive_minutes_needed
 
 
 def test_fetch_last_price_returns_float_from_latest_trade():
