@@ -15,16 +15,25 @@ name: Trading Bot Cycle
 # fetch market data even in paper mode. Without them this fails on every
 # run. See trading-bot/README.md for how to get free paper trading keys.
 #
-# The cron below fires at :07/:22/:37/:52 rather than the more obvious
-# */15 (:00/:15/:30/:45). GitHub explicitly documents that scheduled runs
-# get delayed most at the top of the hour/quarter-hour, when every other
-# repo's cron jobs also fire -- offsetting the minute avoids piling into
-# that queue. This doesn't guarantee exact 15-minute spacing (GitHub's
-# scheduler is best-effort, not real-time), but it noticeably cuts delay.
+# Stocks only trade NYSE hours (~9:30am-4pm ET, weekdays) -- unlike the
+# earlier crypto version of this bot, most hours of most days a run can't
+# do anything at all no matter how often it fires. The cron below only
+# fires 13:00-21:59 UTC on weekdays (Mon-Fri), covering NYSE hours with
+# margin on both sides through both EDT (13:30-20:00 UTC) and EST
+# (14:30-21:00 UTC) without needing to change twice a year for daylight
+# saving -- firing a bit before open / after close is harmless, the bot
+# just logs "market is closed" and exits immediately. Every 5 minutes,
+# offset by :02 rather than starting on the hour, for the same
+# congestion-avoidance reason as before: GitHub explicitly documents that
+# scheduled runs get delayed most at the top of the hour, when every
+# other repo's cron jobs also fire. This doesn't guarantee exact 5-minute
+# spacing (GitHub's scheduler is best-effort, not real-time) -- it
+# maximizes how many of a still-unreliable number of firings land inside
+# the window that can actually matter, not how tightly spaced they are.
 
 on:
   schedule:
-    - cron: "7,22,37,52 * * * *"
+    - cron: "2,7,12,17,22,27,32,37,42,47,52,57 13-21 * * 1-5"
   workflow_dispatch: {}
 
 permissions:
