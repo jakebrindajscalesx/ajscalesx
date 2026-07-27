@@ -40,7 +40,12 @@ permissions:
   contents: write
 
 concurrency:
-  group: trading-bot-cycle
+  # Shared with trading-bot-retrain.yml on purpose: both workflows commit
+  # and push to the same claude/trading-bot-dev-kvjqec branch, and now that
+  # this cycle fires far more often (see the Routine-driven backstop
+  # described below), a same-group lock is what keeps the two from ever
+  # racing to push at the same time.
+  group: trading-bot-dev-branch-writes
   cancel-in-progress: false
 
 jobs:

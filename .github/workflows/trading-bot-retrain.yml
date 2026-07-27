@@ -1,0 +1,81 @@
+name: Trading Bot Daily Retrain
+
+# Retrains the signal model on the latest historical candles and commits
+# the updated models/model.joblib back to the trading-bot branch, so the
+# paper bot (and eventually a real-money one) keeps learning from fresh
+# market data instead of running forever on the model trained once at
+# setup. Bot code lives on claude/trading-bot-dev-kvjqec; this file has to
+# live on the repo's default branch too so it can be dispatched, but it
+# checks out and runs the other branch's code.
+#
+# No schedule trigger here on purpose -- this repo's experience with
+# trading-bot.yml's 5-minute cron showed GitHub's free-tier scheduler
+# silently drops the vast majority of scheduled fires (observed ~2/day
+# out of a theoretical 100+/day). A single once-a-day cron would be even
+# more likely to just not fire on a given day. Instead this is dispatched
+# once a day by a Claude Code Remote Routine that calls the GitHub API
+# directly -- a more reliable clock than GitHub Actions' own scheduler for
+# a once-daily job.
+#
+# Manual run: Actions tab -> Trading Bot Daily Retrain -> Run workflow.
+#
+# Requires EXCHANGE_API_KEY / EXCHANGE_API_SECRET repo secrets (same ones
+# the rest of the bot uses) -- Alpaca requires a key/secret for historical
+# market data.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  # Shared with trading-bot.yml on purpose -- both workflows commit and
+  # push to the same claude/trading-bot-dev-kvjqec branch, so a shared
+  # group is what stops them from ever racing to push at the same time.
+  group: trading-bot-dev-branch-writes
+  cancel-in-progress: false
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout trading-bot branch
+        uses: actions/checkout@v4
+        with:
+          ref: claude/trading-bot-dev-kvjqec
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        working-directory: trading-bot
+        run: pip install -r requirements.txt
+
+      - name: Prepare config
+        working-directory: trading-bot
+        run: |
+          [ -f config.yaml ] || cp config.example.yaml config.yaml
+
+      - name: Retrain model on latest data
+        working-directory: trading-bot
+        env:
+          EXCHANGE_API_KEY: ${{ secrets.EXCHANGE_API_KEY }}
+          EXCHANGE_API_SECRET: ${{ secrets.EXCHANGE_API_SECRET }}
+        run: python train_model.py
+
+      - name: Commit updated model back to trading-bot branch
+        working-directory: trading-bot
+        run: |
+          git config user.name "trading-bot"
+          git config user.email "trading-bot@users.noreply.github.com"
+          git add -f models
+          if git diff --cached --quiet; then
+            echo "No model changes to commit."
+          else
+            git commit -m "Daily retrain: update model on latest data [skip ci]"
+            git push origin HEAD:claude/trading-bot-dev-kvjqec
+          fi
