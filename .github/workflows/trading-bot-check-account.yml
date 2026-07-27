@@ -1,0 +1,65 @@
+name: Trading Bot Check Account
+
+# On-demand only (no schedule): prints your full real Alpaca account state
+# -- cash, buying power, open positions, and recent orders -- including
+# anything placed directly through Alpaca's own site/app, not just orders
+# this bot placed itself. Read-only: doesn't place orders, doesn't touch
+# state/ or the dashboard.
+#
+# Useful because state/portfolio.json (what the dashboard shows) only
+# tracks orders the bot placed itself -- it has no visibility into trades
+# made directly in the same account outside the bot.
+#
+# Run it: Actions tab -> Trading Bot Check Account -> Run workflow.
+# Results show up on the run's summary page when it finishes.
+#
+# Requires EXCHANGE_API_KEY / EXCHANGE_API_SECRET repo secrets (Settings ->
+# Secrets and variables -> Actions) -- same ones the rest of the bot uses.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  check-account:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout trading-bot branch
+        uses: actions/checkout@v4
+        with:
+          ref: claude/trading-bot-dev-kvjqec
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        working-directory: trading-bot
+        run: pip install -r requirements.txt
+
+      - name: Prepare config
+        working-directory: trading-bot
+        run: |
+          [ -f config.yaml ] || cp config.example.yaml config.yaml
+
+      - name: Check account
+        working-directory: trading-bot
+        env:
+          EXCHANGE_API_KEY: ${{ secrets.EXCHANGE_API_KEY }}
+          EXCHANGE_API_SECRET: ${{ secrets.EXCHANGE_API_SECRET }}
+        run: |
+          set -o pipefail
+          python check_account.py | tee /tmp/check_account_output.txt
+
+      - name: Post results to run summary
+        if: always()
+        run: |
+          {
+            echo "## Account state"
+            echo '```'
+            cat /tmp/check_account_output.txt || echo "(no output captured)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
