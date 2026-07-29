@@ -1,0 +1,9 @@
+[
+  {
+    "store_id": "demo-store",
+    "orders_seen": 2,
+    "orders_fulfilled": 2,
+    "errors": [],
+    "ran_at": "2026-07-29T06:33:17.255606+00:00"
+  }
+]
