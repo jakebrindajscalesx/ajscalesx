@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zero to Agency — The OFM Business Blueprint</title>
+<meta name="description" content="Learn how to build and run a subscription-platform management agency: signing creators, growth marketing, contracts, and scaling a team. $97 course.">
+<style>
+  :root{
+    --bg:#0b0e14; --bg2:#12161f; --card:#161b26; --text:#eef1f6; --muted:#9aa4b5;
+    --accent:#5cf0b2; --accent2:#7c9bff; --line:#232a38;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f6f7fb; --bg2:#ffffff; --card:#ffffff; --text:#151a23; --muted:#5b6577; --line:#e4e7ee; }
+  }
+  :root[data-theme="dark"]{ --bg:#0b0e14; --bg2:#12161f; --card:#161b26; --text:#eef1f6; --muted:#9aa4b5; --line:#232a38; }
+  :root[data-theme="light"]{ --bg:#f6f7fb; --bg2:#ffffff; --card:#ffffff; --text:#151a23; --muted:#5b6577; --line:#e4e7ee; }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text); line-height:1.55;
+  }
+  .wrap{max-width:920px; margin:0 auto; padding:0 20px;}
+  a{color:inherit;}
+  .btn{
+    display:inline-block; padding:14px 28px; border-radius:10px; font-weight:700; text-decoration:none;
+    font-size:1rem; transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn-primary{ background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#06110c; }
+  .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 10px 30px -10px rgba(92,240,178,.5); }
+  .btn-ghost{ border:1px solid var(--line); color:var(--text); }
+
+  header.hero{
+    padding:90px 0 70px; text-align:center; position:relative; overflow:hidden;
+    background:
+      radial-gradient(600px 300px at 20% -10%, rgba(124,155,255,.18), transparent),
+      radial-gradient(600px 300px at 80% -10%, rgba(92,240,178,.16), transparent);
+  }
+  .eyebrow{
+    display:inline-block; font-size:.8rem; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--accent); background:rgba(92,240,178,.1); border:1px solid rgba(92,240,178,.3);
+    padding:6px 14px; border-radius:999px; margin-bottom:22px;
+  }
+  h1{ font-size:clamp(2rem,5vw,3.1rem); margin:0 0 18px; letter-spacing:-.02em; }
+  .sub{ font-size:1.15rem; color:var(--muted); max-width:640px; margin:0 auto 34px; }
+  .cta-row{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-bottom:14px;}
+  .price-note{ color:var(--muted); font-size:.9rem; }
+
+  section{ padding:60px 0; border-top:1px solid var(--line); }
+  h2{ font-size:1.7rem; margin-bottom:10px; }
+  .lead{ color:var(--muted); max-width:640px; margin-bottom:36px; }
+
+  .grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px; }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px; }
+  .card h3{ margin:0 0 8px; font-size:1.05rem; }
+  .card p{ margin:0; color:var(--muted); font-size:.92rem; }
+
+  .modules{ counter-reset:mod; }
+  .module{
+    display:flex; gap:16px; padding:18px 0; border-bottom:1px solid var(--line);
+  }
+  .module:last-child{ border-bottom:none; }
+  .module .num{
+    counter-increment:mod; flex:none; width:38px; height:38px; border-radius:10px;
+    background:rgba(124,155,255,.12); color:var(--accent2); display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:.95rem;
+  }
+  .module h3{ margin:0 0 4px; font-size:1rem; }
+  .module p{ margin:0; color:var(--muted); font-size:.9rem; }
+
+  .price-card{
+    background:var(--card); border:1px solid var(--line); border-radius:18px; padding:40px;
+    text-align:center; max-width:480px; margin:0 auto;
+  }
+  .price-old{ text-decoration:line-through; color:var(--muted); font-size:1.1rem; }
+  .price-new{ font-size:3rem; font-weight:800; margin:6px 0 4px; }
+  .price-list{ text-align:left; color:var(--muted); font-size:.92rem; margin:22px 0 28px; padding-left:0; list-style:none; }
+  .price-list li{ padding:6px 0; padding-left:26px; position:relative; }
+  .price-list li::before{ content:"✓"; position:absolute; left:0; color:var(--accent); font-weight:700; }
+
+  .disclaimer{
+    font-size:.82rem; color:var(--muted); background:var(--bg2); border:1px solid var(--line);
+    border-radius:10px; padding:18px 20px; margin-top:40px;
+  }
+  footer{ text-align:center; padding:40px 0 70px; color:var(--muted); font-size:.85rem; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow">OFM Agency Blueprint</span>
+    <h1>Learn to run a subscription-platform<br>management agency — the real way.</h1>
+    <p class="sub">Signing creators, growth marketing, chatting &amp; monetization, contracts, and scaling a team.
+      Taught by someone actually running accounts, not a reseller.</p>
+    <div class="cta-row">
+      <a href="#pricing" class="btn btn-primary">Get the course — $97</a>
+      <a href="#curriculum" class="btn btn-ghost">See what's inside</a>
+    </div>
+    <p class="price-note">One-time payment · Instant access on Skool · 7-day refund</p>
+  </div>
+</header>
+
+<section id="who">
+  <div class="wrap">
+    <h2>Who this is for</h2>
+    <p class="lead">This is a business &amp; marketing course. You don't need to be a creator, show your face, or make any content yourself.</p>
+    <div class="grid">
+      <div class="card"><h3>Aspiring agency owners</h3><p>Want to start managing creators but don't know where to begin — finding clients, pricing, contracts.</p></div>
+      <div class="card"><h3>Existing managers</h3><p>Already chatting or growing one account and want a repeatable system to scale to more.</p></div>
+      <div class="card"><h3>Side-hustlers</h3><p>Looking for a low-capital service business they can run from a phone and a laptop.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="curriculum">
+  <div class="wrap">
+    <h2>What's inside</h2>
+    <p class="lead">8 modules, straight from real day-to-day operating experience — not recycled theory.</p>
+    <div class="modules">
+      <div class="module"><span class="num">1</span><div><h3>Understanding the OFM Business Model</h3><p>How agencies make money, realistic economics, and where to specialize first.</p></div></div>
+      <div class="module"><span class="num">2</span><div><h3>Finding &amp; Signing Your First Creator</h3><p>Where to look, how to run a discovery call, structuring your first offer.</p></div></div>
+      <div class="module"><span class="num">3</span><div><h3>Content Strategy &amp; Growth Marketing</h3><p>The funnel, posting cadence, cross-promotion, and the metrics that actually matter.</p></div></div>
+      <div class="module"><span class="num">4</span><div><h3>Chatting &amp; Monetization</h3><p>PPV strategy, shift structure, and setting clear boundaries with creators.</p></div></div>
+      <div class="module"><span class="num">5</span><div><h3>Contracts, Pricing &amp; Getting Paid</h3><p>What every contract needs, payment cadence, and handling disputes before they start.</p></div></div>
+      <div class="module"><span class="num">6</span><div><h3>Tools &amp; Systems</h3><p>The stack to run this without chaos — scheduling, tracking, documentation.</p></div></div>
+      <div class="module"><span class="num">7</span><div><h3>Scaling: Hiring a Team</h3><p>When and how to hire your first chatter, and managing multiple accounts at once.</p></div></div>
+      <div class="module"><span class="num">8</span><div><h3>Longevity: Legal, Reputation &amp; Staying in Business</h3><p>Compliance basics, reputation as strategy, and your 90-day action plan.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap">
+    <h2 style="text-align:center;">Get started today</h2>
+    <p class="lead" style="text-align:center; margin-left:auto; margin-right:auto;">Founding price for the first cohort. Goes back to $197 once the intro window closes.</p>
+    <div class="price-card">
+      <div class="price-old">$197</div>
+      <div class="price-new">$97</div>
+      <p style="color:var(--muted); margin-bottom:0;">One-time payment · lifetime access</p>
+      <ul class="price-list">
+        <li>All 8 modules + downloadable PDF workbook</li>
+        <li>Contract template you can start using immediately</li>
+        <li>Private Skool community access</li>
+        <li>7-day no-questions refund</li>
+      </ul>
+      <a href="#" class="btn btn-primary" style="width:100%;">Join on Skool — $97</a>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="disclaimer">
+    <strong>Disclaimer:</strong> This course provides business education and is not a guarantee of income.
+    Results depend on individual effort, market conditions, and factors outside our control. Any income
+    examples shown are real results from the instructor's own experience and are not typical or promised
+    outcomes for every student. Must be 18+. This course does not involve or depict adult content.
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">© 2026 Zero to Agency. All rights reserved.</div>
+</footer>
+
+</body>
+</html>
