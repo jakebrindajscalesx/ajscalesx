@@ -3,7 +3,8 @@
 Step-by-step to get the course live on Skool, matching the business plan (low-ticket, one-time $97 purchase, sold via Instagram bio link).
 
 ## 1. Create the community
-- Name: something tied to the brand your mate is building on Instagram (e.g., "[Mate's Name] OFM Academy") — keep it business/education-sounding, not adult-adjacent, since Skool's discovery surfaces community names publicly.
+- Name: **Krown Management** (or "Krown Management Academy") — keep it business/education-sounding, not adult-adjacent, since Skool's discovery surfaces community names publicly.
+- Upload `assets/images/krown-logo.jpeg` as the community icon/banner for consistent branding with the sales page and PDF.
 - Description: 2-3 lines, business-education framing (see sales-page copy below).
 - Set community to **Paid** with a **one-time payment** option (Skool supports one-time in addition to monthly) — price at $97, with a "regular price $197" strikethrough if Skool's plan builder supports it, otherwise state it in the sales copy.
 

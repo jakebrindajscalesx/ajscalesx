@@ -1,6 +1,6 @@
 # 30-Day Launch Plan — OFM Agency Course
 
-**Business:** [Mate's Name] OFM Academy — $97 one-time course
+**Business:** Krown Management — $97 one-time course
 **Channel:** Instagram (organic) → Skool checkout
 **Goal:** Course live, first 20 sales ($1,940) by day 30
 

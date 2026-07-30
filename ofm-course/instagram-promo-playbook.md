@@ -68,10 +68,10 @@ Keep captions short. The video does the work; the caption reinforces + links.
 ## Bio setup
 
 ```
-[Mate's name] | OFM Agency Operator
+[Mate's name] | Krown Management
 I manage [X] accounts → $[Y]/mo combined
 Teaching the exact system 👇
-[Skool link]
+[Linktree/Skool link]
 ```
 
 ## What NOT to post (ad-policy / platform-risk list)
