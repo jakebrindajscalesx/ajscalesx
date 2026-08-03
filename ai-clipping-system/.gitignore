@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Runtime state and generated output — not source.
+state.json
+sources.yaml
+downloads/
+clients/*
+!clients/.gitkeep

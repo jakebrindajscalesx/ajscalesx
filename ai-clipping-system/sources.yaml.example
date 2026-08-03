@@ -1,0 +1,36 @@
+# Copy to sources.yaml and fill in real channels.
+#
+# output_dir / downloads_dir / state_file are resolved relative to this file.
+output_dir: clients
+downloads_dir: downloads
+state_file: state.json
+
+# Model size passed to openai-whisper: tiny/base/small/medium/large.
+whisper_model: base
+
+# "rule_based" (default, no API calls) or "claude" (uses ANTHROPIC_API_KEY
+# to write punchier titles/captions from the transcript snippet).
+caption_backend: rule_based
+
+defaults:
+  max_clips_per_video: 10
+  min_clip_seconds: 15
+  max_clip_seconds: 60
+
+sources:
+  - client: acme_gaming
+    name: "Acme Gaming Streams"
+    platform: twitch
+    channel: acme_gaming_channel
+    check_frequency_minutes: 60
+    vertical_crop: center
+    secondary_signal: true # weight chat message-rate spikes into scoring
+
+  - client: acme_gaming
+    name: "Acme Gaming YouTube"
+    platform: youtube
+    channel: "https://www.youtube.com/@acme_gaming"
+    check_frequency_minutes: 120
+    max_clips_per_video: 8
+    vertical_crop: face_track
+    secondary_signal: true # weight comment velocity into scoring
