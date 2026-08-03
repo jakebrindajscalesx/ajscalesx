@@ -45,6 +45,24 @@ class PipelineConfig:
     sources: list[Source] = field(default_factory=list)
 
 
+def default_config(
+    base_dir: str | Path = ".",
+    whisper_model: str = "base",
+    caption_backend: str = "rule_based",
+) -> PipelineConfig:
+    """A PipelineConfig with no sources.yaml — used by single-video mode
+    (`main.py --video <url>`), which builds its own one-off Source."""
+
+    base_dir = Path(base_dir)
+    return PipelineConfig(
+        clients_dir=base_dir / "clients",
+        downloads_dir=base_dir / "downloads",
+        state_path=base_dir / "state.json",
+        whisper_model=whisper_model,
+        caption_backend=caption_backend,
+    )
+
+
 def load_config(path: str | Path) -> PipelineConfig:
     path = Path(path)
     if not path.exists():

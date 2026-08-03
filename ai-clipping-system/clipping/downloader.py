@@ -89,6 +89,31 @@ def find_new_videos(source: Source, state: StateStore, limit: int = 15) -> list[
     return fresh
 
 
+def resolve_video_ref(url: str) -> VideoRef:
+    """Look up id/title/duration for a single video URL (no playlist/channel
+    listing involved) — used by single-video mode where the caller already
+    has the exact URL to process."""
+
+    cmd = ["yt-dlp", "--no-playlist", "--dump-single-json", url]
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60, check=True)
+    except FileNotFoundError as exc:
+        raise DownloadError("yt-dlp is not installed or not on PATH") from exc
+    except subprocess.CalledProcessError as exc:
+        raise DownloadError(f"yt-dlp lookup failed for {url}: {exc.stderr}") from exc
+    except subprocess.TimeoutExpired as exc:
+        raise DownloadError(f"yt-dlp lookup timed out for {url}") from exc
+
+    info = json.loads(result.stdout)
+    return VideoRef(
+        video_id=str(info["id"]),
+        url=info.get("webpage_url") or url,
+        title=info.get("title") or str(info["id"]),
+        upload_date=info.get("upload_date"),
+        duration=info.get("duration"),
+    )
+
+
 def download_video(video: VideoRef, dest_dir: str | Path) -> Path:
     """Download a video with yt-dlp and return the path to the downloaded file."""
 

@@ -9,7 +9,7 @@ from .caption_gen import suggest_caption
 from .clip_selector import select_clips
 from .config import PipelineConfig, Source
 from .convert.render import render_clip
-from .downloader import DownloadError, VideoRef, download_video, find_new_videos
+from .downloader import DownloadError, VideoRef, download_video, find_new_videos, resolve_video_ref
 from .manifest import Manifest, ManifestClip, write_manifest
 from .reporting import VideoRunResult, append_weekly_summary
 from .scoring import TranscriptHeuristicScorer, TwitchChatSpikeScorer, YoutubeCommentVelocityScorer, combine_scores
@@ -45,11 +45,10 @@ def _secondary_scores(source: Source, local_video_path):
     return None
 
 
-def process_video(
+def _process_video_core(
     cfg: PipelineConfig,
     source: Source,
     video: VideoRef,
-    state: StateStore,
 ) -> VideoRunResult:
     logger.info("Processing %s (%s) for client %s", video.title, video.video_id, source.client)
 
@@ -103,7 +102,6 @@ def process_video(
             )
 
     write_manifest(manifest, video_dir)
-    state.mark_processed(source.platform, source.channel, video.video_id)
 
     return VideoRunResult(
         video_id=video.video_id,
@@ -111,6 +109,46 @@ def process_video(
         clip_count=len(candidates),
         top_clips=top_clips_for_summary,
     )
+
+
+def process_video(
+    cfg: PipelineConfig,
+    source: Source,
+    video: VideoRef,
+    state: StateStore,
+) -> VideoRunResult:
+    result = _process_video_core(cfg, source, video)
+    state.mark_processed(source.platform, source.channel, video.video_id)
+    return result
+
+
+def run_single_video(
+    cfg: PipelineConfig,
+    client: str,
+    url: str,
+    platform: str = "youtube",
+    vertical_crop: str = "center",
+    max_clips: int | None = None,
+    min_seconds: int | None = None,
+    max_seconds: int | None = None,
+) -> VideoRunResult:
+    """Process exactly one video URL, bypassing channel polling/state
+    tracking entirely — for ad-hoc `python main.py --video <url>` runs."""
+
+    source = Source(
+        client=client,
+        platform=platform,
+        channel=url,
+        max_clips_per_video=max_clips or cfg.default_max_clips_per_video,
+        min_clip_seconds=min_seconds or cfg.default_min_clip_seconds,
+        max_clip_seconds=max_seconds or cfg.default_max_clip_seconds,
+        vertical_crop=vertical_crop,
+        secondary_signal=False,
+    )
+    video = resolve_video_ref(url)
+    result = _process_video_core(cfg, source, video)
+    append_weekly_summary(cfg.clients_dir / client, [result])
+    return result
 
 
 def run(cfg: PipelineConfig) -> dict[str, list[VideoRunResult]]:
