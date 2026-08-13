@@ -16,6 +16,7 @@ Everything needed to launch a low-ticket ($97) course teaching the OFM (OnlyFans
 | `terms-of-service.html` | Starter Terms of Service — fill in the bracketed placeholders before publishing |
 | `privacy-policy.html` | Starter Privacy Policy — fill in the bracketed placeholders before publishing |
 | `launch-plan-30-day.md` | Week-by-week plan from build to first 20 sales |
+| `ad-funnel-playbook.md` | **Read before running any paid ads.** Full Instagram ad + Skool funnel process, and how to keep paid ads compliant with Meta's ad policy |
 | `assets/images/krown-logo.jpeg` | Brand logo, used across the PDF and all HTML pages |
 
 ## Suggested order of operations
@@ -25,5 +26,5 @@ Everything needed to launch a low-ticket ($97) course teaching the OFM (OnlyFans
 3. Set up Skool per `skool-setup-guide.md`, pasting in `course-content.md`, and upload the Krown Management logo as the community icon.
 4. Generate/attach `course-content.pdf` as the downloadable workbook.
 5. Adapt `sales-page.html` copy into the Skool community page (or host it separately and link out), and host `terms-of-service.html`/`privacy-policy.html` alongside it.
-6. Start filming with `instagram-promo-playbook.md`.
-7. Follow `launch-plan-30-day.md` day by day.
+6. Start filming with `instagram-promo-playbook.md` and run the organic funnel first (30-day plan).
+7. Once organic is converting, layer in paid Instagram ads per `ad-funnel-playbook.md` — don't skip straight to paid.
