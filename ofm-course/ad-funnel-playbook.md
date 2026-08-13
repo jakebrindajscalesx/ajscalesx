@@ -47,7 +47,7 @@ Don't send ad traffic straight to `sales-page.html` as it currently reads — it
 - Same $97 price, same "Join on Skool" button.
 - This page still funnels to the exact same Skool checkout — it's just the front door that ad traffic sees before deciding to click through.
 
-I can build this as `sales-page-ads.html` (a generic-framed twin of the existing sales page) if you want — say the word and I'll do it now.
+This already exists as `sales-page-ads.html` — use its URL as the destination for any paid Meta ad. Keep `sales-page.html` (which does mention the OFM niche) for organic/bio traffic only, never as an ad destination.
 
 ---
 

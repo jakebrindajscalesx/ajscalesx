@@ -12,7 +12,8 @@ Everything needed to launch a low-ticket ($97) course teaching the OFM (OnlyFans
 | `course-content.pdf` | Sellable/downloadable PDF version of the course (workbook), branded with the Krown Management logo |
 | `instagram-promo-playbook.md` | 20 video hooks, content pillars, posting cadence for your mate's promo videos |
 | `skool-setup-guide.md` | Step-by-step Skool community + course build-out |
-| `sales-page.html` | Branded sales/landing page (open in any browser) — can be hosted anywhere or used as reference copy for the Skool page |
+| `sales-page.html` | Branded sales/landing page for **organic/bio traffic** — mentions the OFM niche directly |
+| `sales-page-ads.html` | Generic-framed twin of the sales page for **paid Instagram ad traffic** — no OFM/OnlyFans mentions, safe destination for ad review (see `ad-funnel-playbook.md`) |
 | `terms-of-service.html` | Starter Terms of Service — fill in the bracketed placeholders before publishing |
 | `privacy-policy.html` | Starter Privacy Policy — fill in the bracketed placeholders before publishing |
 | `launch-plan-30-day.md` | Week-by-week plan from build to first 20 sales |
