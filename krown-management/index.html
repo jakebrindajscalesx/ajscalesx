@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Krown Management — Zero to Agency</title>
+<meta name="description" content="Krown Management presents Zero to Agency: learn how to build and run a subscription-platform management agency — signing creators, growth marketing, contracts, and scaling a team. $97 course.">
+<style>
+  :root{
+    --bg:#f4f3f0; --bg2:#ffffff; --card:#ffffff; --text:#1c1c1c; --muted:#6b6b66;
+    --ink:#1c1c1c; --gold:#a9803f; --gold-soft:#d9c39a; --line:#e2e0da;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#141311; --bg2:#1b1a17; --card:#1f1e1a; --text:#f2f0ea; --muted:#a8a49a; --line:#332f28; }
+  }
+  :root[data-theme="dark"]{ --bg:#141311; --bg2:#1b1a17; --card:#1f1e1a; --text:#f2f0ea; --muted:#a8a49a; --line:#332f28; }
+  :root[data-theme="light"]{ --bg:#f4f3f0; --bg2:#ffffff; --card:#ffffff; --text:#1c1c1c; --muted:#6b6b66; --line:#e2e0da; }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text); line-height:1.55;
+  }
+  .wrap{max-width:920px; margin:0 auto; padding:0 20px;}
+  a{color:inherit;}
+  .btn{
+    display:inline-block; padding:14px 28px; border-radius:4px; font-weight:700; text-decoration:none;
+    font-size:1rem; letter-spacing:.02em; transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn-primary{ background:var(--gold); color:#161310; }
+  .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 10px 30px -10px rgba(169,128,63,.55); }
+  .btn-ghost{ border:1px solid var(--line); color:var(--text); }
+
+  .brand-logo{ width:120px; height:auto; margin:0 auto 20px; display:block; filter:none; }
+  @media (prefers-color-scheme: dark){ .brand-logo{ filter:invert(1) brightness(1.6); } }
+  :root[data-theme="dark"] .brand-logo{ filter:invert(1) brightness(1.6); }
+  :root[data-theme="light"] .brand-logo{ filter:none; }
+
+  header.hero{
+    padding:70px 0 70px; text-align:center; position:relative; overflow:hidden;
+  }
+  .eyebrow{
+    display:inline-block; font-size:.78rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--gold); border:1px solid var(--gold-soft); background:rgba(169,128,63,.08);
+    padding:6px 16px; border-radius:999px; margin-bottom:22px;
+  }
+  h1{ font-size:clamp(2rem,5vw,3rem); margin:0 0 18px; letter-spacing:-.01em; font-weight:700; }
+  .sub{ font-size:1.1rem; color:var(--muted); max-width:620px; margin:0 auto 34px; }
+  .cta-row{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-bottom:14px;}
+  .price-note{ color:var(--muted); font-size:.88rem; }
+
+  section{ padding:60px 0; border-top:1px solid var(--line); }
+  h2{ font-size:1.6rem; margin-bottom:10px; letter-spacing:-.01em; }
+  .lead{ color:var(--muted); max-width:620px; margin-bottom:36px; }
+
+  .grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px; }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:6px; padding:22px; }
+  .card h3{ margin:0 0 8px; font-size:1.02rem; }
+  .card p{ margin:0; color:var(--muted); font-size:.92rem; }
+
+  .modules{ counter-reset:mod; }
+  .module{ display:flex; gap:16px; padding:18px 0; border-bottom:1px solid var(--line); }
+  .module:last-child{ border-bottom:none; }
+  .module .num{
+    counter-increment:mod; flex:none; width:36px; height:36px; border-radius:4px;
+    background:rgba(169,128,63,.1); color:var(--gold); border:1px solid var(--gold-soft);
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.92rem;
+  }
+  .module h3{ margin:0 0 4px; font-size:1rem; }
+  .module p{ margin:0; color:var(--muted); font-size:.9rem; }
+
+  .price-card{
+    background:var(--card); border:1px solid var(--line); border-radius:8px; padding:40px;
+    text-align:center; max-width:460px; margin:0 auto;
+  }
+  .price-old{ text-decoration:line-through; color:var(--muted); font-size:1.05rem; }
+  .price-new{ font-size:2.8rem; font-weight:800; margin:6px 0 4px; }
+  .price-list{ text-align:left; color:var(--muted); font-size:.92rem; margin:22px 0 28px; padding-left:0; list-style:none; }
+  .price-list li{ padding:6px 0; padding-left:26px; position:relative; }
+  .price-list li::before{ content:"✓"; position:absolute; left:0; color:var(--gold); font-weight:700; }
+
+  .disclaimer{
+    font-size:.8rem; color:var(--muted); background:var(--bg2); border:1px solid var(--line);
+    border-radius:6px; padding:18px 20px; margin-top:40px;
+  }
+  footer{ text-align:center; padding:40px 0 70px; color:var(--muted); font-size:.85rem; }
+  footer a{ color:var(--muted); text-decoration:underline; margin:0 8px; }
+  footer .foot-links{ margin-bottom:10px; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <img class="brand-logo" src="assets/images/krown-logo.jpeg" alt="Krown Management logo">
+    <span class="eyebrow">Krown Management Presents</span>
+    <h1>Zero to Agency —<br>the OFM business blueprint.</h1>
+    <p class="sub">Learn to build and run a subscription-platform management agency: signing creators, growth marketing,
+      chatting &amp; monetization, contracts, and scaling a team. Taught by someone actually running accounts, not a reseller.</p>
+    <div class="cta-row">
+      <a href="#pricing" class="btn btn-primary">Get the course — $97</a>
+      <a href="#curriculum" class="btn btn-ghost">See what's inside</a>
+    </div>
+    <p class="price-note">One-time payment · Instant access on Skool · 7-day refund</p>
+  </div>
+</header>
+
+<section id="who">
+  <div class="wrap">
+    <h2>Who this is for</h2>
+    <p class="lead">This is a business &amp; marketing course. You don't need to be a creator, show your face, or make any content yourself.</p>
+    <div class="grid">
+      <div class="card"><h3>Aspiring agency owners</h3><p>Want to start managing creators but don't know where to begin — finding clients, pricing, contracts.</p></div>
+      <div class="card"><h3>Existing managers</h3><p>Already chatting or growing one account and want a repeatable system to scale to more.</p></div>
+      <div class="card"><h3>Side-hustlers</h3><p>Looking for a low-capital service business they can run from a phone and a laptop.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="curriculum">
+  <div class="wrap">
+    <h2>What's inside</h2>
+    <p class="lead">8 modules, straight from real day-to-day operating experience — not recycled theory.</p>
+    <div class="modules">
+      <div class="module"><span class="num">1</span><div><h3>Understanding the OFM Business Model</h3><p>How agencies make money, realistic economics, and where to specialize first.</p></div></div>
+      <div class="module"><span class="num">2</span><div><h3>Finding &amp; Signing Your First Creator</h3><p>Where to look, how to run a discovery call, structuring your first offer.</p></div></div>
+      <div class="module"><span class="num">3</span><div><h3>Content Strategy &amp; Growth Marketing</h3><p>The funnel, posting cadence, cross-promotion, and the metrics that actually matter.</p></div></div>
+      <div class="module"><span class="num">4</span><div><h3>Chatting &amp; Monetization</h3><p>PPV strategy, shift structure, and setting clear boundaries with creators.</p></div></div>
+      <div class="module"><span class="num">5</span><div><h3>Contracts, Pricing &amp; Getting Paid</h3><p>What every contract needs, payment cadence, and handling disputes before they start.</p></div></div>
+      <div class="module"><span class="num">6</span><div><h3>Tools &amp; Systems</h3><p>The stack to run this without chaos — scheduling, tracking, documentation.</p></div></div>
+      <div class="module"><span class="num">7</span><div><h3>Scaling: Hiring a Team</h3><p>When and how to hire your first chatter, and managing multiple accounts at once.</p></div></div>
+      <div class="module"><span class="num">8</span><div><h3>Longevity: Legal, Reputation &amp; Staying in Business</h3><p>Compliance basics, reputation as strategy, and your 90-day action plan.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap">
+    <h2 style="text-align:center;">Get started today</h2>
+    <p class="lead" style="text-align:center; margin-left:auto; margin-right:auto;">Founding price for the first cohort. Goes back to $197 once the intro window closes.</p>
+    <div class="price-card">
+      <div class="price-old">$197</div>
+      <div class="price-new">$97</div>
+      <p style="color:var(--muted); margin-bottom:0;">One-time payment · lifetime access</p>
+      <ul class="price-list">
+        <li>All 8 modules + downloadable PDF workbook</li>
+        <li>Contract template you can start using immediately</li>
+        <li>Private Skool community access</li>
+        <li>7-day no-questions refund</li>
+      </ul>
+      <a href="#" class="btn btn-primary" style="width:100%;">Join on Skool — $97</a>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="disclaimer">
+    <strong>Disclaimer:</strong> This course provides business education and is not a guarantee of income.
+    Results depend on individual effort, market conditions, and factors outside our control. Any income
+    examples shown are real results from the instructor's own experience and are not typical or promised
+    outcomes for every student. Must be 18+. This course does not involve or depict adult content.
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-links">
+      <a href="terms-of-service.html">Terms of Service</a>·
+      <a href="privacy-policy.html">Privacy Policy</a>
+    </div>
+    © 2026 Krown Management. All rights reserved.
+  </div>
+</footer>
+
+</body>
+</html>
