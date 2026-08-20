@@ -1,8 +1,8 @@
 # Store -> bot registry.
 #
 # Copy to config.yaml and add one entry per store you want a bot assigned
-# to. Never put a real token in this file -- `access_token_env` names an
-# environment variable (a GitHub Actions secret in CI, or a local .env)
+# to. Never put a real token/key in this file -- every `*_env` field names
+# an environment variable (a GitHub Actions secret in CI, or a local .env)
 # that holds the real value.
 
 stores:
@@ -12,13 +12,21 @@ stores:
       type: mock
     supplier:
       type: mock
+    pricing:
+      multiplier: 2.5   # retail = supplier cost * multiplier + flat_fee
+      flat_fee: 0.0
 
   # Real store example -- uncomment once you have a Shopify custom-app
-  # token (see README.md) and a real supplier adapter implemented:
+  # token (see README.md) and a supplier account:
   # - id: friend-store-1
   #   platform:
   #     type: shopify
   #     shop_domain: friend-store-1.myshopify.com
   #     access_token_env: SHOPIFY_STORE1_TOKEN
   #   supplier:
-  #     type: mock   # swap for a real SupplierAdapter once one exists
+  #     type: cj
+  #     email_env: CJ_STORE1_EMAIL
+  #     api_key_env: CJ_STORE1_API_KEY
+  #   pricing:
+  #     multiplier: 3.0
+  #     flat_fee: 2.00

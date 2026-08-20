@@ -29,5 +29,10 @@ class StorePlatform(ABC):
         ...
 
     @abstractmethod
+    def upsert_product(self, sku: str, title: str, description: str, price: float, images: list, quantity: int) -> str:
+        """Create the product if it's new, update it if a bot already synced this SKU. Returns the platform's product id."""
+        ...
+
+    @abstractmethod
     def sync_inventory(self, sku: str, quantity: int) -> None:
         ...
