@@ -1,0 +1,19 @@
+[Unit]
+Description=Trading bot (paper/live) - runs main.py continuously
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Edit these two paths for your machine before installing this unit.
+WorkingDirectory=/home/YOUR_USER/trading-bot
+ExecStart=/home/YOUR_USER/trading-bot/venv/bin/python /home/YOUR_USER/trading-bot/main.py
+Restart=on-failure
+RestartSec=30
+
+# Sends SIGTERM on stop, which main.py catches to save state and exit cleanly.
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
