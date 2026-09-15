@@ -1,0 +1,9 @@
+{
+  "tracked_wallets": {},
+  "pending_trades": {},
+  "positions": {},
+  "spend_day": null,
+  "spend_usd_today": 0.0,
+  "paused": false,
+  "leaderboard_refreshed_at": 0.0
+}
