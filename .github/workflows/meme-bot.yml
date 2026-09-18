@@ -1,0 +1,101 @@
+name: Meme Bot Cycle
+
+# Scans tracked wallets for new on-chain buys/sells, proposes mirror trades
+# via Telegram, and executes any you've confirmed since the last run. All
+# bot code lives on the claude/trading-bot-dev-kvjqec branch; this workflow
+# file has to live on the repo's default branch for the schedule trigger to
+# fire (a GitHub requirement), but it checks out and runs the other
+# branch's code rather than merging it in -- same pattern as
+# trading-bot.yml.
+#
+# Manual run: Actions tab -> Meme Bot Cycle -> Run workflow.
+#
+# Requires these repo secrets (Settings -> Secrets and variables -> Actions):
+#   HELIUS_API_KEY, WALLET_PUBLIC_KEY, WALLET_PRIVATE_KEY,
+#   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, and optionally FOMOSCOPE_API_KEY.
+# Without HELIUS_API_KEY/WALLET_*/TELEGRAM_* this fails on every run. See
+# meme-bot/README.md for how to get each one and how to set up the wallet
+# safely. Ships with dry_run: true in meme-bot/config.yaml (once you copy
+# it from config.example.yaml) -- read the README before flipping that off.
+#
+# Meme coins trade 24/7 (no market-hours restriction like the equity bot),
+# so this runs continuously. Offset off the hour for the same
+# congestion-avoidance reason as trading-bot.yml: GitHub explicitly
+# documents that scheduled runs get delayed most at the top of the hour.
+# Given GitHub's schedule trigger has proven unreliable for the equity bot,
+# expect the same here -- ask about setting up a Routine-based backstop
+# once this is confirmed working, the same way trading-bot.yml has one.
+
+on:
+  schedule:
+    - cron: "3,13,23,33,43,53 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  # Separate lock from trading-bot-dev-branch-writes on purpose: this bot's
+  # commits (meme-bot/state/*) never touch the same files the equity bot
+  # writes, so there's no reason to serialize behind its lock too.
+  group: meme-bot-dev-branch-writes
+  cancel-in-progress: false
+
+jobs:
+  run-cycle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout trading-bot-dev branch
+        uses: actions/checkout@v4
+        with:
+          ref: claude/trading-bot-dev-kvjqec
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        working-directory: meme-bot
+        run: pip install -r requirements.txt
+
+      - name: Prepare config
+        working-directory: meme-bot
+        run: |
+          [ -f config.yaml ] || cp config.example.yaml config.yaml
+
+      - name: Scan tracked wallets for new signals
+        working-directory: meme-bot
+        env:
+          HELIUS_API_KEY: ${{ secrets.HELIUS_API_KEY }}
+          FOMOSCOPE_API_KEY: ${{ secrets.FOMOSCOPE_API_KEY }}
+          WALLET_PUBLIC_KEY: ${{ secrets.WALLET_PUBLIC_KEY }}
+          WALLET_PRIVATE_KEY: ${{ secrets.WALLET_PRIVATE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python run_scan.py
+
+      - name: Execute any confirmed trades
+        working-directory: meme-bot
+        env:
+          HELIUS_API_KEY: ${{ secrets.HELIUS_API_KEY }}
+          FOMOSCOPE_API_KEY: ${{ secrets.FOMOSCOPE_API_KEY }}
+          WALLET_PUBLIC_KEY: ${{ secrets.WALLET_PUBLIC_KEY }}
+          WALLET_PRIVATE_KEY: ${{ secrets.WALLET_PRIVATE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python run_confirm.py
+
+      - name: Commit updated state back to trading-bot-dev branch
+        working-directory: meme-bot
+        run: |
+          git config user.name "meme-bot"
+          git config user.email "meme-bot@users.noreply.github.com"
+          git add -f state/state.json state/telegram_offset.json
+          if git diff --cached --quiet; then
+            echo "No state changes to commit."
+          else
+            git commit -m "Meme bot cycle: update state [skip ci]"
+            git push origin HEAD:claude/trading-bot-dev-kvjqec
+          fi

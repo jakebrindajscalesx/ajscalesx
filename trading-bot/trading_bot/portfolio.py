@@ -1,0 +1,138 @@
+from __future__ import annotations
+
+import json
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path
+
+
+@dataclass
+class Position:
+    symbol: str
+    qty: float
+    entry_price: float
+    stop_price: float
+    take_profit_price: float
+    opened_at: str
+    live_order_id: str | None = None
+
+
+MAX_EQUITY_HISTORY_POINTS = 2000
+MAX_PRICE_HISTORY_POINTS = 2000
+
+
+@dataclass
+class Portfolio:
+    cash: float
+    positions: dict[str, Position] = field(default_factory=dict)
+    trade_log: list[dict] = field(default_factory=list)
+    equity_history: list[dict] = field(default_factory=list)
+    price_history: dict[str, list[dict]] = field(default_factory=dict)
+
+    def total_equity(self, current_prices: dict[str, float]) -> float:
+        equity = self.cash
+        for symbol, pos in self.positions.items():
+            price = current_prices.get(symbol, pos.entry_price)
+            equity += pos.qty * price
+        return equity
+
+    def record_equity(self, equity: float, at: str | None = None) -> None:
+        """Appends a timestamped equity snapshot, called once per cycle, so
+        the dashboard can plot an actual curve instead of just the current
+        number. Capped so state doesn't grow unbounded over months of
+        scheduled runs -- once full, drops the oldest point per new one."""
+        self.equity_history.append(
+            {"t": at or datetime.now(timezone.utc).isoformat(), "equity": round(equity, 4)}
+        )
+        if len(self.equity_history) > MAX_EQUITY_HISTORY_POINTS:
+            self.equity_history = self.equity_history[-MAX_EQUITY_HISTORY_POINTS:]
+
+    def record_prices(self, current_prices: dict[str, float], at: str | None = None) -> None:
+        """Appends a timestamped price snapshot per symbol, called once per
+        cycle, so the dashboard can chart actual price against a position's
+        entry/stop/take-profit lines instead of just the latest number."""
+        ts = at or datetime.now(timezone.utc).isoformat()
+        for symbol, price in current_prices.items():
+            history = self.price_history.setdefault(symbol, [])
+            history.append({"t": ts, "price": round(price, 8)})
+            if len(history) > MAX_PRICE_HISTORY_POINTS:
+                self.price_history[symbol] = history[-MAX_PRICE_HISTORY_POINTS:]
+
+    def open_position(
+        self,
+        symbol: str,
+        qty: float,
+        entry_price: float,
+        stop_price: float,
+        take_profit_price: float,
+        live_order_id: str | None = None,
+    ) -> Position:
+        cost = qty * entry_price
+        if cost > self.cash:
+            raise ValueError(
+                f"Insufficient cash to open {symbol}: need {cost:.2f}, have {self.cash:.2f}"
+            )
+        self.cash -= cost
+        pos = Position(
+            symbol=symbol,
+            qty=qty,
+            entry_price=entry_price,
+            stop_price=stop_price,
+            take_profit_price=take_profit_price,
+            opened_at=datetime.now(timezone.utc).isoformat(),
+            live_order_id=live_order_id,
+        )
+        self.positions[symbol] = pos
+        return pos
+
+    def close_position(self, symbol: str, exit_price: float, reason: str) -> dict:
+        pos = self.positions.pop(symbol)
+        proceeds = pos.qty * exit_price
+        self.cash += proceeds
+        pnl = proceeds - (pos.qty * pos.entry_price)
+        record = {
+            "symbol": symbol,
+            "qty": pos.qty,
+            "entry_price": pos.entry_price,
+            "exit_price": exit_price,
+            "pnl": pnl,
+            "reason": reason,
+            "opened_at": pos.opened_at,
+            "closed_at": datetime.now(timezone.utc).isoformat(),
+        }
+        self.trade_log.append(record)
+        return record
+
+    def to_dict(self) -> dict:
+        return {
+            "cash": self.cash,
+            "positions": {k: asdict(v) for k, v in self.positions.items()},
+            "trade_log": self.trade_log,
+            "equity_history": self.equity_history,
+            "price_history": self.price_history,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Portfolio":
+        positions = {k: Position(**v) for k, v in data.get("positions", {}).items()}
+        return cls(
+            cash=data["cash"],
+            positions=positions,
+            trade_log=data.get("trade_log", []),
+            equity_history=data.get("equity_history", []),
+            price_history=data.get("price_history", {}),
+        )
+
+    def save(self, path: str | Path) -> None:
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w") as f:
+            json.dump(self.to_dict(), f, indent=2)
+
+    @classmethod
+    def load_or_create(cls, path: str | Path, starting_balance: float) -> "Portfolio":
+        path = Path(path)
+        if path.exists():
+            with open(path) as f:
+                return cls.from_dict(json.load(f))
+        return cls(cash=starting_balance)

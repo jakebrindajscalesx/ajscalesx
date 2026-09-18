@@ -1,0 +1,8 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+trading-bot/state/*.json
+trading-bot/state/*.log
+trading-bot/models/*.joblib
