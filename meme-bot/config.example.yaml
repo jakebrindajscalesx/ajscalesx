@@ -1,0 +1,66 @@
+# Copy to config.yaml and adjust. config.yaml is this bot's single source of
+# truth for how it behaves. API keys/secrets are NOT in here -- those go in
+# .env (see .env.example).
+#
+# This bot is fundamentally different from ../trading-bot: that one places
+# paper (simulated) orders through a regulated broker. This one places REAL
+# orders with REAL money on-chain, on meme coins, which can go to zero. Read
+# README.md in full before ever setting dry_run to false.
+
+dry_run: true             # true = the bot does everything except actually
+                           # sign/send the swap transaction: it scans wallets,
+                           # detects buys, proposes mirror trades, alerts you
+                           # on Telegram, and logs what it WOULD have executed.
+                           # Leave this true until you've watched at least a
+                           # few full cycles and are confident the signal
+                           # detection and sizing look right. Flip to false
+                           # only when you're ready for real funds to move.
+
+chain: solana              # only chain currently supported
+
+funding_token: SOL         # what tracked wallets' buys get mirrored using --
+                           # SOL is the natural default since almost every
+                           # Solana meme coin trades against it
+
+leaderboard:
+  source: fomoscope         # where "the biggest traders" come from
+  top_n: 10                 # how many top wallets to track at once
+  refresh_minutes: 60       # how often to re-pull the leaderboard and swap
+                             # in new top performers
+  min_win_rate_pct: 55      # ignore leaderboard entries below this win rate
+  min_trades_30d: 10        # ignore wallets with too small a sample size to
+                             # mean anything (avoids chasing a lucky streak)
+
+sizing:
+  mirror_mode: fixed         # fixed = every mirrored buy uses trade_usd
+                             # below, regardless of the tracked wallet's own
+                             # position size. (proportional mirroring is not
+                             # implemented yet -- see README.)
+  trade_usd: 10              # $ size of each mirrored trade. START SMALL.
+                             # This is real money once dry_run is false.
+  max_daily_spend_usd: 50    # circuit breaker: bot proposes no further new
+                             # buys once today's confirmed spend hits this,
+                             # no matter how many signals come in. Existing
+                             # positions can still be sold.
+  max_open_positions: 5      # cap on distinct tokens held at once
+
+execution:
+  slippage_bps: 150          # max acceptable slippage on the Jupiter swap,
+                              # in basis points (150 = 1.5%) -- meme coins
+                              # move fast, too tight a number means most
+                              # swaps just fail
+  confirmation_timeout_minutes: 15   # a proposed trade expires (is no longer
+                                      # executable) if you haven't replied
+                                      # /confirm or /reject on Telegram within
+                                      # this window -- the signal is stale by
+                                      # then anyway
+
+exit:
+  mirror_sells: true          # if a tracked wallet sells a token the bot
+                               # holds because it mirrored a buy from that
+                               # same wallet, propose a matching sell
+  stand_alone_stop_loss_pct: 25   # regardless of what the tracked wallet
+                                    # does, propose an emergency sell if a
+                                    # held position is down this much -- meme
+                                    # coins can rug/dump faster than a wallet
+                                    # you're watching reacts
