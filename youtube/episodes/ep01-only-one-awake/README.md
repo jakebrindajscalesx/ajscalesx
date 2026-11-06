@@ -27,6 +27,8 @@ channel's recent uploads.
 | [seo.md](seo.md) | Description, checked chapters, tags, upload settings | `yt-seo` + `yt-chapters` + `chapters.py` |
 | [shorts.md](shorts.md) | 5 Shorts with new scored opening lines, on-screen text and loop points | `yt-shorts` + `hookscore.py` |
 | [plan.md](plan.md) | Production week, hours, what to do after it's live | `yt-plan` |
+| [prompts.md](prompts.md) | AI voice design, delivery notes for each clip, character sheets, 43 shot prompts (image + motion), music, thumbnail prompt | (written for any AI voice, image or video tool) |
+| [voiceover.txt](voiceover.txt) | Narration split into 12 clips with `<break>` pauses, ready for the AI voice | (generated from script.md) |
 | [script-timed.srt](script-timed.srt) | The script timed at 150 wpm, used to generate the chapters | (generated) |
 
 ## Tools that couldn't run yet, and why
